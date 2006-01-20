@@ -142,8 +142,3 @@ puts parser.parse(receipt) # compiles and outputs expanded template
 
 # another alternate
 puts Radius.parse(receipt, context)
-
-template = Radius::Template.compile('template to compile')
-template.expand(data)
-
-output = Radius.parse(string, data)
