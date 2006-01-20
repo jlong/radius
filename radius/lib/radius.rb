@@ -1,4 +1,4 @@
-module Template
+module Radius
 	class Context; end
 	
 	class Data
