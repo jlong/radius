@@ -1,0 +1,17 @@
+Road Map
+--------
+
+1. Clean up the current code base.
+
+2. Add support for multi-level contexts: tags should be able to be
+   defined to only be valid within other sets of tags.
+
+3. Create a simple DSL for defining contexts. I had done some thinking
+   about this in the past. This thread on Ruby-Talk defined part of it:
+
+   http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-talk/127640/
+
+   Update: See spec.txt for a fuller explanation of how the DSL should
+   behave.
+
+4. Optimize for speed. Incorporate strscan?
