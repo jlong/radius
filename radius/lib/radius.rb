@@ -1,21 +1,30 @@
 module Radius
-  class ParseError < StandardError; end
+  class ParseError < StandardError # :nodoc:
+  end
   
-  class MissingEndTagError < ParseError
+  class MissingEndTagError < ParseError # :nodoc:
     def initialize(tag_name)
       super("end tag not found for start tag `#{tag_name}'")
     end
   end
   
+  #
+  # An abstract class for creating a Context. A context defines the tags that
+  # are available for use in a template.
+  #
   class Context
+    # The prefix attribute controls the string of text that is helps the parser
+    # identify template tags. By default this attribute is set to "radius", but
+    # you may want to override this for your own contexts.
     attr_accessor :prefix
     
+    # Creates a new Context object.
     def initialize
       @prefix = 'radius'
     end
   end
   
-  class Tag
+  class Tag # :nodoc:
     def initialize(&b)
       @block = b
     end
@@ -27,27 +36,36 @@ module Radius
     end
   end
 
-  class ContainerTag < Tag
+  class ContainerTag < Tag # :nodoc:
     attr_accessor :name, :attributes, :contents
     
-    def initialize(name="", attributes={}, contents = [], &b)
+    def initialize(name="", attributes={}, contents=[], &b)
       @name, @attributes, @contents = name, attributes, contents
       super(&b)
     end
   end
-    
+  
+  #
+  # The Radius parser. Initialize a parser with the Context object that defines
+  # how tags should be expanded.
+  #
   class Parser
+    # The Context object used to expand template tags.
+    attr_accessor :context
+    
+    # Creates a new parser object initialized with a context.
     def initialize(context = Context.new)
       @context = context
     end
 
-    def parse(text)
+    # Parse string for tags, expand them, and return the result.
+    def parse(string)
       @stack = [ContainerTag.new { |t| t.contents.to_s }]
-      pre_parse(text)
+      pre_parse(string)
       @stack.last.to_s
     end
     
-    def pre_parse(text)
+    def pre_parse(text) # :nodoc:
       re = %r{<#{@context.prefix}:(\w+?)(?:\s+?([^/>]*?)|)>|</#{@context.prefix}:(\w+?)\s*?>}
       if md = re.match(text)
         start_tag, attr, end_tag = $1, $2, $3
@@ -67,12 +85,12 @@ module Radius
       end
     end
     
-    def parse_start_tag(start_tag, attr, remaining)
+    def parse_start_tag(start_tag, attr, remaining) # :nodoc:
       @stack.push(ContainerTag.new(start_tag, parse_attributes(attr)))
       pre_parse(remaining)
     end
 
-    def parse_end_tag(end_tag, remaining)
+    def parse_end_tag(end_tag, remaining) # :nodoc:
       popped = @stack.pop
       if popped.name == end_tag
         popped.on_parse { |t| @context.send(popped.name, popped.attributes) { t.contents.to_s } }
@@ -84,7 +102,7 @@ module Radius
       end
     end
     
-    def parse_individual(text)
+    def parse_individual(text) # :nodoc:
       re = /<#{@context.prefix}:(\w+?)\s+?(.*?)\s*?\/>/
       if md = re.match(text)
         attr = parse_attributes($2)
@@ -95,7 +113,7 @@ module Radius
       end
     end
     
-    def parse_attributes(text)
+    def parse_attributes(text) # :nodoc:
       attr = {}
       re = /(\w+?)\s*=\s*('|")(.*?)\2/
       while md = re.match(text)

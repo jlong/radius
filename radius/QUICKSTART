@@ -1,0 +1,98 @@
+=Quick Start
+
+Before you can parse a template with Radius you need to create a Context object which defines
+the tags that will be used in the template. This is pretty simple:
+
+  require 'radius'
+  
+  class MyContext < Radius::Context
+    def hello(attr)
+      "Hello #{attr['name'] || 'World'}!"
+    end
+  end
+
+Once you have defined a context you can create a Parser and parse to your heart's content:
+
+  parser = Radius::Parser.new(MyContext.new)
+  puts parser.parse('<p><radius:hello /></p>')
+  puts parser.parse('<p><radius:hello name="John" /></p>')
+
+This will output:
+
+  <p>Hello World!</p>
+  <p>Hello John!</p>
+
+Note how you can pass attributes from the template to the context using the attributes hash
+(which is passed in as the first parameter.). Above the first tag that was parsed didn't have
+a name attribute so the code in the +hello+ method uses "World" instead. The second time the
+tag is parsed the name attribute is set to "John" which is used to create the string "Hello
+John!".
+
+Radius also allows you to define "container" tags. That is, tags that contain content and
+that may optionally manipulate it in some way. For example, if you have RedCloth installed
+you could define another tag to parse and create Textile output:
+
+  require 'redcloth'
+  
+  class MyContext < Radius::Context
+    def textile(attr)
+      contents = yield
+      RedCloth.new(contents).to_html
+    end
+  end
+
+With the code above your parser can easily handle Textile:
+
+  parser.parse('<radius:textile>h1. Hello **World**!</radius:textile>')
+
+This will output:
+
+  <h1>Hello <strong>World</strong>!</h1>
+
+But wait!--it gets better. Because container tags can manipulate what they contain you can use
+them to iterate over collections:
+
+  class ThreeStoogesContext < Radius::Context
+    def initialize
+      @prefix = 'ts'
+    end
+    def stooge(attr)
+      content = ''
+      ["Larry", "Moe", "Curly"].each do |name|
+        @name = name
+        content << yield
+      end
+      content
+    end
+    def name(attr)
+      @name
+    end
+  end
+  
+  parser = Radius::Parser.new(ThreeStoogesContext.new)
+  
+  template = <<-TEMPLATE
+  <ul>
+  <ts:stooge>
+  <li><ts:name /></li>
+  </ts:stooge>
+  </ul>
+  TEMPLATE
+  
+  puts parser.parse(template)
+  
+This will output:
+
+  <ul>
+  
+    <li>Larry</li>
+  
+    <li>Moe</li>
+  
+    <li>Curly</li>
+  
+  </ul>
+
+The above code also illustrates how you can set the prefix instance variable to control the
+string that prefixes Radius tags. By setting the prefix to "ts" our tags must begin with "ts"
+instead of "radius" like they did in the other examples.

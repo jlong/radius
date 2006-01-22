@@ -1,6 +1,15 @@
 require 'rake/testtask'
+require 'rake/rdoctask'
 
 task :default => :test
-Rake::TestTask.new { |t| 
+
+Rake::TestTask.new do |t| 
   t.pattern = 'test/**/*_test.rb'
-}
+end
+
+Rake::RDocTask.new do |rd|
+  rd.title = 'Radius Documentation'
+  rd.main = "README"
+  rd.rdoc_files.include("README", "QUICKSTART", "ROADMAP", "DSL-SPEC", "lib/**/*.rb")
+  rd.rdoc_dir = 'doc'
+end
