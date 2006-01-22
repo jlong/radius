@@ -1,5 +1,7 @@
+require 'rubygems'
 require 'rake/testtask'
 require 'rake/rdoctask'
+require 'rake/gempackagetask'
 
 task :default => :test
 
@@ -12,4 +14,28 @@ Rake::RDocTask.new do |rd|
   rd.main = "README"
   rd.rdoc_files.include("README", "QUICKSTART", "ROADMAP", "DSL-SPEC", "lib/**/*.rb")
   rd.rdoc_dir = 'doc'
+end
+
+spec = Gem::Specification.new do |s|
+  s.platform = Gem::Platform::RUBY
+  s.summary = "Powerful tag-based template system."
+  s.name = 'radius'
+  s.version = '0.0.1'
+  s.requirements << 'none'
+  s.require_path = 'lib'
+  s.autorequire = 'radius'
+  s.has_rdoc = true
+  s.rdoc_options << '--title' << 'Rake -- Ruby Make' <<
+                    '--main' << 'README' <<
+                    '--line-numbers' << 'ROADMAP' <<
+                    'QUICKSTART' << 'DSL-SPEC' << 'README'
+  files = FileList['**/*']
+  files.exclude 'doc'
+  s.files = files.to_a
+  s.description = "Radius is a small, but powerful tag-based template language inspired\nby the template languages used in MovableType and TextPattern."
+end
+
+Rake::GemPackageTask.new(spec) do |pkg|
+  pkg.need_zip = true
+  pkg.need_tar = true
 end
