@@ -10,7 +10,7 @@ Rake::TestTask.new do |t|
 end
 
 Rake::RDocTask.new do |rd|
-  rd.title = 'Radius Documentation'
+  rd.title = 'Radius -- Powerful Tag-Based Templates'
   rd.main = "README"
   rd.rdoc_files.include("README", "QUICKSTART", "ROADMAP", "DSL-SPEC", "lib/**/*.rb")
   rd.rdoc_dir = 'doc'
@@ -25,7 +25,7 @@ spec = Gem::Specification.new do |s|
   s.require_path = 'lib'
   s.autorequire = 'radius'
   s.has_rdoc = true
-  s.rdoc_options << '--title' << 'Rake -- Ruby Make' <<
+  s.rdoc_options << '--title' << 'Radius -- Powerful Tag-Based Templates' <<
                     '--main' << 'README' <<
                     '--line-numbers' << 'ROADMAP' <<
                     'QUICKSTART' << 'DSL-SPEC' << 'README'

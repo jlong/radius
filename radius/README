@@ -1,4 +1,4 @@
-= Radius
+= Radius -- Powerful Tag-Based Templates
 
 Radius is a small, but powerful template language for Ruby inspired by the template languages
 used in MovableType <http://www.movabletype.org> and TextPattern <http://www.textpattern.com>.
