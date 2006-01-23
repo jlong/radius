@@ -13,6 +13,6 @@ This is a prioritized roadmap for future releases:
    http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-talk/127640/
 
    Update: See link:files/DSL-SPEC.html for a fuller explanation of how
-   the DSL should behave.
+   the DSL might behave.
 
 4. Optimize for speed. Incorporate strscan?

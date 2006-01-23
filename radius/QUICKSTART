@@ -1,4 +1,6 @@
-=Quick Start
+= Radius Quick Start
+
+== Defining Tags
 
 Before you can parse a template with Radius you need to create a Context object which defines
 the tags that will be used in the template. This is pretty simple:
@@ -17,16 +19,19 @@ Once you have defined a context you can create a Parser and parse to your heart'
   puts parser.parse('<p><radius:hello /></p>')
   puts parser.parse('<p><radius:hello name="John" /></p>')
 
-This will output:
+This code will output:
 
   <p>Hello World!</p>
   <p>Hello John!</p>
 
 Note how you can pass attributes from the template to the context using the attributes hash
-(which is passed in as the first parameter.). Above the first tag that was parsed didn't have
+(which is passed in as the first parameter). Above, the first tag that was parsed didn't have
 a name attribute so the code in the +hello+ method uses "World" instead. The second time the
 tag is parsed the name attribute is set to "John" which is used to create the string "Hello
-John!".
+John!". <b>All tag definitions must accept only one parameter--the attributes hash.</b> Tags
+that do not follow this rule will be treated as if they were undefined (like normal methods).
+
+== Container Tags
 
 Radius also allows you to define "container" tags. That is, tags that contain content and
 that may optionally manipulate it in some way. For example, if you have RedCloth installed
@@ -45,17 +50,14 @@ With the code above your parser can easily handle Textile:
 
   parser.parse('<radius:textile>h1. Hello **World**!</radius:textile>')
 
-This will output:
+This code will output:
 
   <h1>Hello <strong>World</strong>!</h1>
 
-But wait!--it gets better. Because container tags can manipulate what they contain you can use
-them to iterate over collections:
+But wait!--it gets better. Because container tags can manipulate the content they contain
+you can use them to iterate over collections:
 
   class ThreeStoogesContext < Radius::Context
-    def initialize
-      @prefix = 'ts'
-    end
     def stooge(attr)
       content = ''
       ["Larry", "Moe", "Curly"].each do |name|
@@ -73,15 +75,15 @@ them to iterate over collections:
   
   template = <<-TEMPLATE
   <ul>
-  <ts:stooge>
-  <li><ts:name /></li>
-  </ts:stooge>
+  <radius:stooge>
+    <li><radius:name /></li>
+  </radius:stooge>
   </ul>
   TEMPLATE
   
   puts parser.parse(template)
   
-This will output:
+This code will output:
 
   <ul>
   
@@ -93,6 +95,42 @@ This will output:
   
   </ul>
 
-The above code also illustrates how you can set the prefix instance variable to control the
-string that prefixes Radius tags. By setting the prefix to "ts" our tags must begin with "ts"
-instead of "radius" like they did in the other examples.
+
+== Altering the Tag Prefix
+
+By default, all Radius tags must begin with "radius". You can change this by altering the
+prefix attribute on a Context. For example:
+
+  class MyContext < Radius::Context
+    def initialize
+      @prefix = 'r'
+    end
+  end
+
+Now, when parsing templates with MyContext, Radius will require that tags begin with "r".
+
+
+== Using Context#tag_missing to Define Behavior for Missing Tags
+
+Context#tag_missing behaves much like Object#method_missing only it allows you to define
+specific behavior for when a tag is not defined on a Context. For example:
+
+  class LazyContext < Radius::Context
+    def initialize
+      @prefix = 'lazy'
+    end
+    def tag_missing(tag, attr, &block)
+      "<strong>ERROR: Undefined tag `#{tag}' with attributes #{attr.inspect}</strong>"
+    end
+  end
+  
+  parser = Parser.new(LazyContext.new)
+  puts parser.parse('<lazy:weird value="true" />')
+
+This code will output:
+
+  <strong>ERROR: Undefined tag `weird' with attributes {"value"=>"true"}</strong>
+
+Normally, when the Radius Parser encounters an undefined tag for a Context it raises an
+UndefinedTagError, but since we have defined #tag_missing on LazyContext the Parser now
+outputs our custom message.
