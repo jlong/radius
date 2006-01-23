@@ -9,10 +9,14 @@ Rake::TestTask.new do |t|
   t.pattern = 'test/**/*_test.rb'
 end
 
+RDOC_TITLE = "Radius -- Powerful Tag-Based Templates"
+RDOC_EXTRAS = ["README", "QUICKSTART", "ROADMAP", "DSL-SPEC", "CHANGELOG"]
+
 Rake::RDocTask.new do |rd|
   rd.title = 'Radius -- Powerful Tag-Based Templates'
   rd.main = "README"
-  rd.rdoc_files.include("README", "QUICKSTART", "ROADMAP", "DSL-SPEC", "lib/**/*.rb")
+  rd.rdoc_files.include("lib/**/*.rb")
+  rd.rdoc_files.include(RDOC_EXTRAS)
   rd.rdoc_dir = 'doc'
 end
 
@@ -20,19 +24,18 @@ spec = Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY
   s.summary = "Powerful tag-based template system."
   s.name = 'radius'
-  s.version = '0.0.1'
+  s.version = '0.0.2'
   s.requirements << 'none'
   s.require_path = 'lib'
   s.autorequire = 'radius'
   s.has_rdoc = true
-  s.rdoc_options << '--title' << 'Radius -- Powerful Tag-Based Templates' <<
-                    '--main' << 'README' <<
-                    '--line-numbers' << 'ROADMAP' <<
-                    'QUICKSTART' << 'DSL-SPEC' << 'README'
+  s.rdoc_options << '--title' << RDOC_TITLE <<
+                    '--main' << 'README' << '--line-numbers'
+  RDOC_EXTRAS.each { |f| s.rdoc_options << f }
   files = FileList['**/*']
   files.exclude 'doc'
   s.files = files.to_a
-  s.description = "Radius is a small, but powerful tag-based template language inspired\nby the template languages used in MovableType and TextPattern."
+  s.description = "Radius is a small, but powerful tag-based template language for Ruby\nsimilar to the ones used in MovableType and TextPattern. It has tags\nsimilar to HTML or XML, but can be used to generate any form of plain\ntext (not just HTML)."
 end
 
 Rake::GemPackageTask.new(spec) do |pkg|

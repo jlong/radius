@@ -8,6 +8,12 @@ module Radius
     end
   end
   
+  class UndefinedTagError < ParseError
+    def initialize(tag_name)
+      super("undefined tag `#{tag_name}'")
+    end
+  end
+  
   #
   # An abstract class for creating a Context. A context defines the tags that
   # are available for use in a template.
@@ -15,12 +21,27 @@ module Radius
   class Context
     # The prefix attribute controls the string of text that is helps the parser
     # identify template tags. By default this attribute is set to "radius", but
-    # you may want to override this for your own contexts.
+    # you may want to override this when creating your own contexts.
     attr_accessor :prefix
     
     # Creates a new Context object.
     def initialize
       @prefix = 'radius'
+    end
+    
+    # Returns the value of a rendered tag. Used internally by Parser#parse.
+    def render_tag(tag, attributes = {}, &block)
+      symbol = tag.to_s.intern
+      if respond_to?(symbol) and method(symbol).arity == 1
+        send(symbol, attributes, &block)
+      else
+        tag_missing(tag, attributes, &block)
+      end
+    end
+    
+    # Like method_missing for objects, but fired when a tag is undefined.
+    def tag_missing(tag, attributes, &block)
+      raise UndefinedTagError.new(tag)
     end
   end
   
@@ -28,9 +49,11 @@ module Radius
     def initialize(&b)
       @block = b
     end
+      
     def on_parse(&b)
       @block = b
     end
+    
     def to_s
       @block.call(self)
     end
@@ -93,7 +116,7 @@ module Radius
     def parse_end_tag(end_tag, remaining) # :nodoc:
       popped = @stack.pop
       if popped.name == end_tag
-        popped.on_parse { |t| @context.send(popped.name, popped.attributes) { t.contents.to_s } }
+        popped.on_parse { |t| @context.render_tag(popped.name, popped.attributes) { t.contents.to_s } }
         tag = @stack.last
         tag.contents << popped
         pre_parse(remaining)
@@ -106,7 +129,7 @@ module Radius
       re = /<#{@context.prefix}:(\w+?)\s+?(.*?)\s*?\/>/
       if md = re.match(text)
         attr = parse_attributes($2)
-        replace = @context.send($1, attr)
+        replace = @context.render_tag($1, attr)
         md.pre_match + replace + parse_individual(md.post_match)
       else
         text || ''
