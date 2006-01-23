@@ -124,7 +124,7 @@ specific behavior for when a tag is not defined on a Context. For example:
     end
   end
   
-  parser = Parser.new(LazyContext.new)
+  parser = Radius::Parser.new(LazyContext.new)
   puts parser.parse('<lazy:weird value="true" />')
 
 This code will output:
