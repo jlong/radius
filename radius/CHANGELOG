@@ -1,5 +1,6 @@
 = Change Log
 
+=== 0.0.2
 * Refactored Parser to use Context#render_tag instead of #send when rendering tags defined on a Context.
 * UndefinedTagError is now thrown when Parser tries to render a tag which doesn't exist on a Context.
 * Added Context#tag_missing which works like method_method missing on Object, but is tag specific.
