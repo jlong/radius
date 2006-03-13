@@ -33,13 +33,29 @@ module Radius
     # Creates a new Context object.
     def initialize
       @prefix = 'radius'
+      @tags = {}
+      @attr_stack = []
+      @block_stack = []
+      build_tags if respond_to? :build_tags
+    end
+    
+    # Creates a tag definition on a context.
+    def tag(name, &block)
+      name = name.to_s
+      @tags[name] = block || proc { instance_variable_get("@#{name}").to_s }
     end
     
     # Returns the value of a rendered tag. Used internally by Parser#parse.
     def render_tag(tag, attributes = {}, &block)
-      symbol = tag.to_s.intern
-      if respond_to?(symbol) and method(symbol).arity == 1
-        send(symbol, attributes, &block)
+      tag = tag.to_s
+      tag_block = @tags[tag.to_s]
+      if tag_block
+        @attr_stack.push attributes
+        @block_stack.push block
+        result = instance_eval(&tag_block)
+        @attr_stack.pop
+        @block_stack.pop
+        result
       else
         tag_missing(tag, attributes, &block)
       end
@@ -51,6 +67,21 @@ module Radius
     def tag_missing(tag, attributes, &block)
       raise UndefinedTagError.new(tag)
     end
+    
+    private
+    
+      def attr
+        @attr_stack.last
+      end
+      alias :attributes :attr
+    
+      def block
+        @block_stack.last
+      end
+      
+      def work
+        block.call
+      end
   end
   
   class Tag # :nodoc:

@@ -11,44 +11,17 @@ only valid within certain containing tags.
       @user = options[:user]
       @cart = options[:cart]
       @session = options[:session]
+      build_tags
     end
-  
-    # expose the @user object variable
-    container(:user, :exposes => :user) do
-      # Use protect() on an object that has been exposed to prevent access to
-      # an attribute in a template. Conversely you could use the expose() method
-      # to expose specific attributes to the template and protect all others.
-      protect :password
-    
-      # add a single tag that returns the session_id
-      tag :session_id do |attributes|
-        @session.id
+
+    def build_tags
+      tag "user", :expose => [:name, :login, :email]
+      tag "user:session", :expose => :id
+      tag "user:password" do |attr|
+        "*" * @user.password.size
       end
-    end
-  
-    # expose the @cart object as the basket tag
-    container(:basket, :exposes => :cart) do
-      expand do |attributes|
-        #
-        # some initialization code with attributes before handling
-        # content block
-        #
-        yeild
-      end
-    
-      container(:items, :exposes => :item) do
-        expand do |attributes|
-          @cart.items.each do |@item|
-            yield
-          end
-        end
-      end
-    end
-  
-    container :cart do
-      expand do |attributes|
-        yield
-      end
+      tag "basket", :for => @cart, :exposes => :total
+      tag "basket:items", :for => @cart.items
     end
   end
 
@@ -74,13 +47,15 @@ only valid within certain containing tags.
     end
   
     def total
-      @items.map { |line_item| line_item.total }
+      @items.inject(0) do |total, line_item|
+        total += line_item.total
+      end 
     end
   end
 
   class LineItem
     attr_accessor :name, :description, :quantity, :item_price
-    def intialize(name, description, price, quantity)
+    def initialize(name, description, price, quantity)
       @name, @description, @price, @quantity = name, description, price, quantity
     end
     def full_price
@@ -90,7 +65,7 @@ only valid within certain containing tags.
 
   receipt = <<-RECEIPT
   <p><r:user:name />, thank you for shopping with us! An order summary
-    is printed below for your convinience. Please print a copy for your records.</p>
+    is printed below for your convenience. Please print a copy for your records.</p>
   <r:cart>
     <table>
       <thead>
@@ -102,17 +77,17 @@ only valid within certain containing tags.
         </tr>
       </thead>
       <tbody>
-        <r:items>
+        <r:items:each>
           <tr>
             <td>
               <strong><r:name /></strong><br >
               <r:description />
             </td>
             <td><r:price /></td>
-            <td><r:quanity /></td>
+            <td><r:quantity /></td>
             <td><r:full_price /></td>
           </tr>
-        </r:items>
+        </r:items:each>
       </tbody>
       <tr>
         <td colspan="3">Total</td>

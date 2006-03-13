@@ -14,7 +14,7 @@ RDOC_EXTRAS = ["README", "QUICKSTART", "ROADMAP", "DSL-SPEC", "CHANGELOG"]
 
 Rake::RDocTask.new do |rd|
   rd.title = 'Radius -- Powerful Tag-Based Templates'
-  rd.main = "Radius"
+  rd.main = "README"
   rd.rdoc_files.include("lib/**/*.rb")
   rd.rdoc_files.include(RDOC_EXTRAS)
   rd.rdoc_dir = 'doc'
