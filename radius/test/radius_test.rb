@@ -10,10 +10,6 @@ class TestContext < Radius::Context
       attr["text"]
     end
     
-    tag "add" do
-      (attr["param1"].to_i + attr["param2"].to_i).to_s
-    end
-    
     tag "reverse" do
       work.reverse
     end
@@ -34,29 +30,18 @@ class TestContext < Radius::Context
         @count.to_s       
       end
     end
-    
-    tag "repeat" do
-      string = ''
-      (attr['count'] || '1').to_i.times { string << work }
-      string
-    end
-    
-    tag "each_item" do
-      result = []
-      @items.each { |@item| result << work }
-      @item = nil
-      result.join(attr["between"] || "")
-    end
-  
-    tag "item"
-    
-    tag "hello" do
-      "Hello #{attr['name'] || 'World'}!"
-    end
+  end
+end
+
+module RadiusTestHelper
+  def define_tag(name, &block)
+    @context.tag name, &block
   end
 end
 
 class RadiusContextTest < Test::Unit::TestCase
+  include RadiusTestHelper
+  
   def setup
     @context = TestContext.new
   end
@@ -66,17 +51,12 @@ class RadiusContextTest < Test::Unit::TestCase
     assert_equal 'radius', @context.prefix
   end
   
-  def test_render_tag__individual
-    text = @context.render_tag('hello')
-    assert_equal('Hello World!', text)
-
-    text = @context.render_tag('hello', 'name' => 'John')
-    assert_equal('Hello John!', text)
-  end
-  
-  def test_render_tag__container
-    text = @context.render_tag('repeat', 'count' => '5') { 'o' }
-    assert_equal('ooooo', text)
+  def test_render_tag
+    define_tag "hello" do
+      "Hello #{attr['name'] || 'World'}!"
+    end
+    assert_render_tag_output 'Hello World!', 'hello'
+    assert_render_tag_output 'Hello John!', 'hello', 'name' => 'John'
   end
   
   def test_render_tag__undefined_tag
@@ -97,53 +77,91 @@ class RadiusContextTest < Test::Unit::TestCase
     expected = %{undefined tag `undefined_tag' with attributes {"cool"=>"beans"}}
     assert_equal expected, text
   end
+  
+  private
+    
+    def assert_render_tag_output(output, *render_tag_params)
+      assert_equal output, @context.render_tag(*render_tag_params)
+    end
+  
 end
 
 class RadiusParserTest < Test::Unit::TestCase
+  include RadiusTestHelper
+  
   def setup
-    @t = Radius::Parser.new(TestContext.new)
+    @context = TestContext.new
+    @parser = Radius::Parser.new(@context)
   end
   
-  def test_parse_individual
+  def test_parse_individual_tags_and_parameters
+    define_tag "add" do
+      attr["param1"].to_i + attr["param2"].to_i
+    end
     assert_parse_individual_output "<hello world!>", %{<<test:echo text="hello world!" />>}
-    assert_parse_individual_output  "3", %{<test:add param1="1" param2='2'/>}
+    assert_parse_individual_output "3", %{<test:add param1="1" param2='2'/>}
     assert_parse_individual_output "a 3 + 1 = 4 b", %{a <test:echo text="3 + 1 =" /> <test:add param1="3" param2="1"/> b}
   end
   
   def test_parse_attributes
-    r = @t.parse_attributes(%{ a="1" b='2'c="3"d="'" })
+    r = @parser.parse_attributes(%{ a="1" b='2'c="3"d="'" })
     assert_equal({"a" => "1", "b" => "2", "c" => "3", "d" => "'"}, r)
   end
   
-  def test_parse__double
+  def test_parse_result_is_always_a_string
+    define_tag("twelve") { 12 }
+    assert_parse_output "12", "<test:twelve />"
+  end
+  
+  def test_parse_double
     assert_parse_output "test".reverse, "<test:reverse>test</test:reverse>"
     assert_parse_output "tset TEST", "<test:reverse>test</test:reverse> <test:capitalize>test</test:capitalize>"
   end
-  def test_parse
+  def test_parse_multiple_tags
     assert_parse_output "hello world! cool: b TSET a !", "<test:echo text='hello world!' /> cool: <test:reverse>a <test:capitalize>test</test:capitalize> b</test:reverse> !"
+  end
+  def test_parse_nested
     assert_parse_output "!dlrow olleh", "<test:reverse><test:echo text='hello world!' /></test:reverse>"
+  end
+  def test_parse_nested_double_tags
     assert_parse_output "!dlrow olleh TSET", "<test:reverse><test:capitalize>test</test:capitalize> <test:echo text='hello world!' /></test:reverse>"
     assert_parse_output "43TA21", "<test:reverse>12<test:capitalize>at</test:capitalize>34</test:reverse>"
   end
-  def test_parse__looping
-    assert_parse_output "12345", %{<test:count set="0" /><test:repeat count="5"><test:count inc="true" /><test:count /></test:repeat>}
-    assert_parse_output %{Three Stooges: "Larry", "Moe", "Curly"}, %{Three Stooges: <test:each_item between=", ">"<test:item />"</test:each_item>}
+  def test_parse_nested
+    define_tag("outer") { work.reverse }
+    define_tag("outer:inner") { ["renni", work].join }
+    define_tag("outer:inner:heart") { "heart" }
+    define_tag("outer:branch") { "branch" }
+    assert_parse_output "inner", "<test:outer><test:inner /></test:outer>"
+    assert_parse_output "renni", "<test:outer:inner />"
+    assert_parse_output "heart", "<test:outer:inner:heart />"
+    assert_parse_output "hcnarbinner", "<test:outer><test:inner><test:branch /></test:inner></test:outer>"
+    assert_raises(Radius::UndefinedTagError) { @parser.parse("<test:inner />") }
   end
-  
-  def test_parse__fail_on_no_end_tag
-    assert_raises(Radius::MissingEndTagError) { @t.parse("<test:reverse>") }
-    assert_raises(Radius::MissingEndTagError) { @t.parse("<test:reverse><test:capitalize></test:reverse>") }
+  def test_parse_loop
+    define_tag "each" do
+      result = []
+      @items.each { |@item| result << work }
+      @item = nil
+      result.join(attr["between"] || "")
+    end
+    define_tag "item"
+    assert_parse_output %{Three Stooges: "Larry", "Moe", "Curly"}, %{Three Stooges: <test:each between=", ">"<test:item />"</test:each>}
+  end
+  def test_parse__fail_on_missing_end_tag
+    assert_raises(Radius::MissingEndTagError) { @parser.parse("<test:reverse>") }
+    assert_raises(Radius::MissingEndTagError) { @parser.parse("<test:reverse><test:capitalize></test:reverse>") }
   end
   
   private
   
     def assert_parse_output(output, input, message = nil)
-      r = @t.parse(input)
+      r = @parser.parse(input)
       assert_equal(output, r, message)
     end
     
     def assert_parse_individual_output(output, input, message = nil)
-      r = @t.parse_individual(input)
+      r = @parser.parse_individual(input)
       assert_equal(output, r, message)
     end
   

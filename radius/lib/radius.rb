@@ -34,6 +34,7 @@ module Radius
     def initialize
       @prefix = 'radius'
       @tags = {}
+      @name_stack = []
       @attr_stack = []
       @block_stack = []
       build_tags if respond_to? :build_tags
@@ -47,15 +48,12 @@ module Radius
     
     # Returns the value of a rendered tag. Used internally by Parser#parse.
     def render_tag(tag, attributes = {}, &block)
-      tag = tag.to_s
-      tag_block = @tags[tag.to_s]
+      name = qualified_tag_name(tag.to_s)
+      tag_block = @tags[name]
       if tag_block
-        @attr_stack.push attributes
-        @block_stack.push block
-        result = instance_eval(&tag_block)
-        @attr_stack.pop
-        @block_stack.pop
-        result
+        stack(name, attributes, block) do
+          instance_eval(&tag_block).to_s
+        end
       else
         tag_missing(tag, attributes, &block)
       end
@@ -70,17 +68,46 @@ module Radius
     
     private
     
+      # Returns the attributes for the current tag.
       def attr
         @attr_stack.last
       end
       alias :attributes :attr
     
+      # Returns the render block for the current tag.
       def block
         @block_stack.last
       end
       
+      # Executes the render block for the current tag and returns the
+      # result.
       def work
-        block.call
+        block ? block.call : ''
+      end
+      
+      # A convienence method for managing the various parts of the
+      # rendering stack.
+      def stack(name, attributes, block)
+        @name_stack.push name
+        @attr_stack.push attributes
+        @block_stack.push block
+        result = yield
+        @block_stack.pop
+        @attr_stack.pop
+        @name_stack.pop
+        result
+      end
+      
+      # Returns a fully qualified tag name based on state of the
+      # rendering stack.
+      def qualified_tag_name(name)
+        names = @name_stack.dup
+        while names.size > 0
+          try = (names + [name]).join(':')
+          return try if @tags.has_key? try 
+          names.pop
+        end
+        name
       end
   end
   
@@ -101,7 +128,7 @@ module Radius
   class ContainerTag < Tag # :nodoc:
     attr_accessor :name, :attributes, :contents
     
-    def initialize(name="", attributes={}, contents=[], &b)
+    def initialize(name = "", attributes = {}, contents = [], &b)
       @name, @attributes, @contents = name, attributes, contents
       super(&b)
     end
@@ -128,7 +155,7 @@ module Radius
     end
     
     def pre_parse(text) # :nodoc:
-      re = %r{<#{@context.prefix}:(\w+?)(?:\s+?([^/>]*?)|)>|</#{@context.prefix}:(\w+?)\s*?>}
+      re = %r{<#{@context.prefix}:([\w:]+?)(?:\s+?([^/>]*?)|)>|</#{@context.prefix}:([\w:]+?)\s*?>}
       if md = re.match(text)
         start_tag, attr, end_tag = $1, $2, $3
         @stack.last.contents << Tag.new { parse_individual(md.pre_match) }
@@ -165,7 +192,7 @@ module Radius
     end
     
     def parse_individual(text) # :nodoc:
-      re = /<#{@context.prefix}:(\w+?)\s+?(.*?)\s*?\/>/
+      re = /<#{@context.prefix}:([\w:]+?)\s+?(.*?)\s*?\/>/
       if md = re.match(text)
         attr = parse_attributes($2)
         replace = @context.render_tag($1, attr)
