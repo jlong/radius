@@ -21,7 +21,7 @@ only valid within certain containing tags.
         "*" * @user.password.size
       end
       tag "basket", :for => @cart, :expose => :total
-      tag "basket:items", :for => proc { @cart.items }, :type => :interable
+      tag "basket:items", :for => proc { @cart.items }, :type => :iterable, :item_expose => [:name, :description, :quantity, :price]
     end
   end
 
@@ -80,12 +80,12 @@ only valid within certain containing tags.
         <r:items:each>
           <tr>
             <td>
-              <strong><r:name /></strong><br >
-              <r:description />
+              <strong><r:item:name /></strong><br >
+              <r:item:description />
             </td>
-            <td><r:price /></td>
-            <td><r:quantity /></td>
-            <td><r:full_price /></td>
+            <td><r:item:price /></td>
+            <td><r:item:quantity /></td>
+            <td><r:item:full_price /></td>
           </tr>
         </r:items:each>
       </tbody>

@@ -3,18 +3,18 @@ require 'radius'
 
 module RadiusTestHelper
   class TestContext < Radius::Context
-    attr_accessor :user
+    attr_accessor :user, :items
 
     def initialize
       super
       @prefix = "r"
-      tag("reverse"   ) { work.reverse }
-      tag("capitalize") { work.upcase  }
+      define_tag("reverse"   ) { expand.reverse }
+      define_tag("capitalize") { expand.upcase  }
     end
   end
   
   def define_tag(name, options = {}, &block)
-    @context.tag name, options, &block
+    @context.define_tag name, options, &block
   end
 end
 
@@ -69,6 +69,8 @@ class RadiusParserTest < Test::Unit::TestCase
   
   def setup
     @context = TestContext.new
+    @context.items = [4,2,8,5]
+    
     @parser = Radius::Parser.new(@context)
   end
   
@@ -95,8 +97,8 @@ class RadiusParserTest < Test::Unit::TestCase
   end
   
   def test_parse_nested
-    define_tag("outer") { work.reverse }
-    define_tag("outer:inner") { ["renni", work].join }
+    define_tag("outer") { expand.reverse }
+    define_tag("outer:inner") { ["renni", expand].join }
     define_tag("outer:inner:heart") { "heart" }
     define_tag("outer:branch") { "branch" }
     assert_parse_output "inner", "<r:outer><r:inner /></r:outer>"
@@ -109,7 +111,7 @@ class RadiusParserTest < Test::Unit::TestCase
   def test_parse_loops
     define_tag "each" do
       result = []
-      ["Larry", "Moe", "Curly"].each { |@item| result << work }
+      ["Larry", "Moe", "Curly"].each { |@item| result << expand }
       result.join(attr["between"] || "")
     end
     define_tag "item"
@@ -117,7 +119,7 @@ class RadiusParserTest < Test::Unit::TestCase
   end
   
   class User
-    attr_accessor :name, :age, :email
+    attr_accessor :name, :age, :email, :friend
     def initialize(name, age, email)
       @name, @age, @email = name, age, email
     end
@@ -131,13 +133,46 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_raises(Radius::UndefinedTagError) { @parser.parse "<r:user:email />" }
   end
   
-  def test_tag_for_option
+  def test_tag_option_for
     define_tag 'tag_prefix', :for => 'prefix'
     assert_parse_output 'r', '<r:tag_prefix />'
-    
+  end
+  
+  def test_tag_options_for_and_expose
     @context.user = User.new('John', 25, 'test@johnwlong.com')
     define_tag 'author', 'for' => :user, 'expose' => :name
     assert_parse_output 'John', '<r:author:name />'
+  end
+  
+  def test_tag_option_for_with_proc
+    @context.user = User.new('John', 25, 'test@johnwlong.com')
+    @context.user.friend = User.new('Jake', 23, 'test@jake.com')
+    define_tag 'author:friend', :for => proc { self.user.friend }, 'expose' => 'name'
+    assert_parse_output 'Jake', '<r:author:friend:name />'
+  end
+  
+  def test_tag_option_type_is_enumerable
+    define_tag 'items', :type => :enumerable
+    assert_parse_output '4', '<r:items:size />'
+    assert_parse_output '4', '<r:items:count />'
+    assert_parse_output '4', '<r:items:length />'
+    assert_parse_output '8', '<r:items:max />'
+    assert_parse_output '2', '<r:items:min />'
+    assert_parse_output '(4)(2)(8)(5)', '<r:items:each>(<r:item />)</r:items:each>'
+  end
+  def test_tag_option_for_and_type_is_enumerable
+    define_tag 'array', :for => :items, :type => :enumerable, :item_tag => 'number', :expose => [:first, :last]
+    assert_parse_output '4', '<r:array:first />'
+    assert_parse_output '5', '<r:array:last />'
+    assert_parse_output '(4)(2)(8)(5)', '<r:array:each>(<r:number />)</r:array:each>'
+  end
+  def test_tag_option_type_is_enumerable_and_exposed_item
+    @context.items = [
+      User.new('John', 25, 'test@johnwlong.com'),
+      User.new('James', 27, 'test@jameslong.com')
+    ]
+    define_tag 'users', :for => :items, :type => :enumerable, :item_tag => :user, :item_expose => [:name, :age]
+    assert_parse_output "* John (25)\n* James (27)\n", "<r:users:each>* <r:user:name /> (<r:user:age />)\n</r:users:each>"
   end
   
   def test_parse_fail_on_missing_end_tag
