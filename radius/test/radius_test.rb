@@ -1,41 +1,20 @@
 require 'test/unit'
 require 'radius'
 
-class TestContext < Radius::Context
-  def build_tags
-    @prefix = "test"
-    @items = ["Larry", "Moe", "Curly"]
-    
-    tag "echo" do
-      attr["text"]
-    end
-    
-    tag "reverse" do
-      work.reverse
-    end
-    
-    tag "capitalize" do
-      work.upcase
-    end
-    
-    tag "count" do
-      case
-      when attr["set"]
-        @count = attr["set"].to_i
-        ""
-      when attr["inc"] == "true"
-        @count = (@count || 0) + 1
-        ""
-      else
-        @count.to_s       
-      end
+module RadiusTestHelper
+  class TestContext < Radius::Context
+    attr_accessor :user
+
+    def initialize
+      super
+      @prefix = "r"
+      tag("reverse"   ) { work.reverse }
+      tag("capitalize") { work.upcase  }
     end
   end
-end
-
-module RadiusTestHelper
-  def define_tag(name, &block)
-    @context.tag name, &block
+  
+  def define_tag(name, options = {}, &block)
+    @context.tag name, options, &block
   end
 end
 
@@ -72,9 +51,8 @@ class RadiusContextTest < Test::Unit::TestCase
     end
     
     text = ''
-    assert_nothing_raised { text = @context.render_tag('undefined_tag', 'cool' => 'beans') }
-    
     expected = %{undefined tag `undefined_tag' with attributes {"cool"=>"beans"}}
+    assert_nothing_raised { text = @context.render_tag('undefined_tag', 'cool' => 'beans') }
     assert_equal expected, text
   end
   
@@ -98,9 +76,7 @@ class RadiusParserTest < Test::Unit::TestCase
     define_tag "add" do
       attr["param1"].to_i + attr["param2"].to_i
     end
-    assert_parse_individual_output "<hello world!>", %{<<test:echo text="hello world!" />>}
-    assert_parse_individual_output "3", %{<test:add param1="1" param2='2'/>}
-    assert_parse_individual_output "a 3 + 1 = 4 b", %{a <test:echo text="3 + 1 =" /> <test:add param1="3" param2="1"/> b}
+    assert_parse_individual_output "<3>", %{<<r:add param1="1" param2='2'/>>}
   end
   
   def test_parse_attributes
@@ -110,47 +86,63 @@ class RadiusParserTest < Test::Unit::TestCase
   
   def test_parse_result_is_always_a_string
     define_tag("twelve") { 12 }
-    assert_parse_output "12", "<test:twelve />"
+    assert_parse_output "12", "<r:twelve />"
   end
   
-  def test_parse_double
-    assert_parse_output "test".reverse, "<test:reverse>test</test:reverse>"
-    assert_parse_output "tset TEST", "<test:reverse>test</test:reverse> <test:capitalize>test</test:capitalize>"
+  def test_parse_double_tags
+    assert_parse_output "test".reverse, "<r:reverse>test</r:reverse>"
+    assert_parse_output "tset TEST", "<r:reverse>test</r:reverse> <r:capitalize>test</r:capitalize>"
   end
-  def test_parse_multiple_tags
-    assert_parse_output "hello world! cool: b TSET a !", "<test:echo text='hello world!' /> cool: <test:reverse>a <test:capitalize>test</test:capitalize> b</test:reverse> !"
-  end
-  def test_parse_nested
-    assert_parse_output "!dlrow olleh", "<test:reverse><test:echo text='hello world!' /></test:reverse>"
-  end
-  def test_parse_nested_double_tags
-    assert_parse_output "!dlrow olleh TSET", "<test:reverse><test:capitalize>test</test:capitalize> <test:echo text='hello world!' /></test:reverse>"
-    assert_parse_output "43TA21", "<test:reverse>12<test:capitalize>at</test:capitalize>34</test:reverse>"
-  end
+  
   def test_parse_nested
     define_tag("outer") { work.reverse }
     define_tag("outer:inner") { ["renni", work].join }
     define_tag("outer:inner:heart") { "heart" }
     define_tag("outer:branch") { "branch" }
-    assert_parse_output "inner", "<test:outer><test:inner /></test:outer>"
-    assert_parse_output "renni", "<test:outer:inner />"
-    assert_parse_output "heart", "<test:outer:inner:heart />"
-    assert_parse_output "hcnarbinner", "<test:outer><test:inner><test:branch /></test:inner></test:outer>"
-    assert_raises(Radius::UndefinedTagError) { @parser.parse("<test:inner />") }
+    assert_parse_output "inner", "<r:outer><r:inner /></r:outer>"
+    assert_parse_output "renni", "<r:outer:inner />"
+    assert_parse_output "heart", "<r:outer:inner:heart />"
+    assert_parse_output "hcnarbinner", "<r:outer><r:inner><r:branch /></r:inner></r:outer>"
+    assert_raises(Radius::UndefinedTagError) { @parser.parse("<r:inner />") }
   end
-  def test_parse_loop
+  
+  def test_parse_loops
     define_tag "each" do
       result = []
-      @items.each { |@item| result << work }
-      @item = nil
+      ["Larry", "Moe", "Curly"].each { |@item| result << work }
       result.join(attr["between"] || "")
     end
     define_tag "item"
-    assert_parse_output %{Three Stooges: "Larry", "Moe", "Curly"}, %{Three Stooges: <test:each between=", ">"<test:item />"</test:each>}
+    assert_parse_output %{Three Stooges: "Larry", "Moe", "Curly"}, %{Three Stooges: <r:each between=", ">"<r:item />"</r:each>}
   end
-  def test_parse__fail_on_missing_end_tag
-    assert_raises(Radius::MissingEndTagError) { @parser.parse("<test:reverse>") }
-    assert_raises(Radius::MissingEndTagError) { @parser.parse("<test:reverse><test:capitalize></test:reverse>") }
+  
+  class User
+    attr_accessor :name, :age, :email
+    def initialize(name, age, email)
+      @name, @age, @email = name, age, email
+    end
+  end
+  
+  def test_tag_expose_option
+    @context.user = User.new('John', 25, 'test@johnwlong.com')
+    define_tag 'user', :expose => ['name', 'age']
+    assert_parse_output 'John', '<r:user:name />'
+    assert_parse_output '25', '<r:user><r:age /></r:user>'
+    assert_raises(Radius::UndefinedTagError) { @parser.parse "<r:user:email />" }
+  end
+  
+  def test_tag_for_option
+    define_tag 'tag_prefix', :for => 'prefix'
+    assert_parse_output 'r', '<r:tag_prefix />'
+    
+    @context.user = User.new('John', 25, 'test@johnwlong.com')
+    define_tag 'author', 'for' => :user, 'expose' => :name
+    assert_parse_output 'John', '<r:author:name />'
+  end
+  
+  def test_parse_fail_on_missing_end_tag
+    assert_raises(Radius::MissingEndTagError) { @parser.parse("<r:reverse>") }
+    assert_raises(Radius::MissingEndTagError) { @parser.parse("<r:reverse><r:capitalize></r:reverse>") }
   end
   
   private

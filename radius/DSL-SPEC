@@ -17,11 +17,11 @@ only valid within certain containing tags.
     def build_tags
       tag "user", :expose => [:name, :login, :email]
       tag "user:session", :expose => :id
-      tag "user:password" do |attr|
+      tag "user:password" do
         "*" * @user.password.size
       end
-      tag "basket", :for => @cart, :exposes => :total
-      tag "basket:items", :for => @cart.items
+      tag "basket", :for => @cart, :expose => :total
+      tag "basket:items", :for => proc { @cart.items }, :type => :interable
     end
   end
 

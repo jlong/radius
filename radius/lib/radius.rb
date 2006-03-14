@@ -34,16 +34,31 @@ module Radius
     def initialize
       @prefix = 'radius'
       @tags = {}
-      @name_stack = []
+      @tag_name_stack = []
       @attr_stack = []
       @block_stack = []
-      build_tags if respond_to? :build_tags
     end
     
     # Creates a tag definition on a context.
-    def tag(name, &block)
+    def tag(name, options = {}, &block)
+      options = Util.symbolize_keys(options)
       name = name.to_s
-      @tags[name] = block || proc { instance_variable_get("@#{name}").to_s }
+      for_name = options.has_key?(:for) ? options[:for].to_s : name
+      @tags[name] = block || proc do 
+        if single?
+          instance_variable_get("@#{for_name}").to_s
+        else
+          work
+        end
+      end
+      if options[:expose]
+        [*options[:expose]].each do |method|
+          @tags["#{name}:#{method}"] = proc {
+            object = instance_variable_get("@#{for_name}")
+            object.send(method).to_s
+          }
+        end
+      end
     end
     
     # Returns the value of a rendered tag. Used internally by Parser#parse.
@@ -80,28 +95,36 @@ module Radius
       end
       
       # Executes the render block for the current tag and returns the
-      # result.
+      # result. Returns and empty string if block is nil.
       def work
-        block ? block.call : ''
+        double? ? block.call : ''
+      end
+      
+      def single?
+        block.nil?
+      end
+      
+      def double?
+        not single?
       end
       
       # A convienence method for managing the various parts of the
       # rendering stack.
       def stack(name, attributes, block)
-        @name_stack.push name
+        @tag_name_stack.push name
         @attr_stack.push attributes
         @block_stack.push block
         result = yield
         @block_stack.pop
         @attr_stack.pop
-        @name_stack.pop
+        @tag_name_stack.pop
         result
       end
       
       # Returns a fully qualified tag name based on state of the
       # rendering stack.
       def qualified_tag_name(name)
-        names = @name_stack.dup
+        names = @tag_name_stack.dup
         while names.size > 0
           try = (names + [name]).join(':')
           return try if @tags.has_key? try 
@@ -212,4 +235,15 @@ module Radius
       attr
     end
   end
+  
+  module Util
+    def self.symbolize_keys(hash)
+      new_hash = {}
+      hash.keys.each do |k|
+        new_hash[k.to_s.intern] = hash[k]
+      end
+      new_hash
+    end
+  end
+  
 end
