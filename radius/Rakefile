@@ -23,7 +23,7 @@ end
 spec = Gem::Specification.new do |s|
   s.name = 'radius'
   s.rubyforge_project = 'radius'
-  s.version = '0.0.2'
+  s.version = '0.1.0'
   s.summary = 'Powerful tag-based template system.'
   s.description = "Radius is a small, but powerful tag-based template language for Ruby\nsimilar to the ones used in MovableType and TextPattern. It has tags\nsimilar to HTML or XML, but can be used to generate any form of plain\ntext (not just HTML)."
   s.homepage = 'http://radius.rubyforge.org'

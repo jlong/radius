@@ -8,8 +8,11 @@ the tags that will be used in the template. This is pretty simple:
   require 'radius'
   
   class MyContext < Radius::Context
-    def hello(attr)
-      "Hello #{attr['name'] || 'World'}!"
+    def initialize
+      super
+      define_tag "hello" do
+        "Hello #{attr['name'] || 'World'}!"
+      end
     end
   end
 
@@ -25,13 +28,14 @@ This code will output:
   <p>Hello John!</p>
 
 Note how you can pass attributes from the template to the context using the attributes hash
-(which is passed in as the first parameter). Above, the first tag that was parsed didn't have
-a name attribute so the code in the +hello+ method uses "World" instead. The second time the
-tag is parsed the name attribute is set to "John" which is used to create the string "Hello
-John!". <b>All tag definitions must accept only one parameter--the attributes hash.</b> Tags
-that do not follow this rule will be treated as if they were undefined (like normal methods).
+(which is available inside any tag definition). Above, the first tag that was parsed didn't
+have a name attribute so the code in the +hello+ method uses "World" instead. The second time
+the tag is parsed the name attribute is set to "John" which is used to create the string
+"Hello John!". <b>All tag definitions must accept only one parameter--the attributes hash.</b>
+Tags that do not follow this rule will be treated as if they were undefined (like normal
+methods).
 
-== Container Tags
+== Container Tags and Nesting
 
 Radius also allows you to define "container" tags. That is, tags that contain content and
 that may optionally manipulate it in some way. For example, if you have RedCloth installed
@@ -40,13 +44,17 @@ you could define another tag to parse and create Textile output:
   require 'redcloth'
   
   class MyContext < Radius::Context
-    def textile(attr)
-      contents = yield
-      RedCloth.new(contents).to_html
+    def initialize
+      super
+      define_tag "textile" do
+        contents = expand
+        RedCloth.new(contents).to_html
+      end
     end
   end
 
-With the code above your parser can easily handle Textile:
+(The +expand+ "keyword" above returns the contents of between the start and end tags.) With
+the code above your parser can easily handle Textile:
 
   parser.parse('<radius:textile>h1. Hello **World**!</radius:textile>')
 
@@ -58,16 +66,19 @@ But wait!--it gets better. Because container tags can manipulate the content the
 you can use them to iterate over collections:
 
   class ThreeStoogesContext < Radius::Context
-    def stooge(attr)
-      content = ''
-      ["Larry", "Moe", "Curly"].each do |name|
-        @name = name
-        content << yield
+    def initialize
+      super
+      define_tag "stooge" do
+        content = ''
+        ["Larry", "Moe", "Curly"].each do |name|
+          @name = name
+          content << expand
+        end
+        content
       end
-      content
-    end
-    def name(attr)
-      @name
+      define_tag "stooge:name" do
+        @name
+      end
     end
   end
   
@@ -95,6 +106,113 @@ This code will output:
   
   </ul>
 
+Note how the definition for the +name+ tag is defined. Because "name" is prefixed
+with "stooge:" the +name+ tag cannot appear outside the +stooge+ tag. Had it been defined
+simply as "name" it would be valid anywhere, even outside the +stooge+ tag (which was
+not what we wanted). Using the colon operator you can define tags with any amount of
+hierarchal nesting.
+
+
+== Exposing Objects to Your Templates
+
+During normal operation, you will often want to expose certain objects to your templates.
+Writing the tags to do this all by hand would be cumbersome of Radius did not provide
+several mechanisms to make this easier. The first is a way of exposing instance variables
+that are on the context object. To expose an instance variable simply call the +define_tag+
+method without the block:
+
+  define_tag "count"
+
+This would expose the instance variable +count+ to the template as the +count+ tag. It's
+basically the equivalent of writing:
+
+  define_tag("count") { @count }
+
+So far this doesn't save you a whole lot of typing, but suppose you want to expose certain
+methods that are on that object? You could do this:
+
+  define_tag "user", :expose => [ :name, :age, :email ]
+  
+This will add a total of four tags to the context. One for the <tt>@user</tt> instance variable, and
+one for each of the three methods listed in the +expose+ clause. You could now get the user's
+name inside your template like this:
+
+  <radius:user><radius:name /></radius:user>
+
+If "John" was the value stored in <tt>@user.name</tt> the template would render as "John". I could
+also get the same result using tag short-hand from within the template:
+
+  <radius:user:name />
+
+The short-hand used above is making use of the colon operator (":") to reference the +name+ tag inside
+the +user+ tag. Radius allows you to use this shortcut with most tags.
+
+This way of mapping instance variables to tags is rather nice, but what if your instance
+variable is not named the same as your tag? What should you do then? Use the +for+ parameter in the
++options+ hash:
+
+  define_tag "author", :for => "user", :expose => [ :name, :age, :email ]
+
+This will create an +author+ tag which is mapped to the <tt>@user</tt> instance variable and expose
+the +name+, +age+, and +email attributes as child tags.
+
+
+== Enumerable Tags: Working With Collections
+
+Our three-stooges example a few sections above is fairly complex way of exposing a simple array
+in your template. As of Radius 0.1.0 there is a far easier way:
+
+  define_tag "stooges", :type => :enumerable
+
+This would create a +stooges+ tag that would map to to the +@stooges+ instance variable.
+Assuming the +@stooges+ instance variable contained an array (<tt>["Larry", "Moe", "Curly"]</tt>) you
+could then put the following code in your template:
+
+  <radius:stooges:each><radius:item /> </radius:stooges:each>
+  
+And it would render like this:
+
+  Larry Moe Curly
+  
+Now, in real life you often need to deal with collections of objects, not just strings (which
+is the case in the above example). Suppose that the array in the above example was really a
+collection of +Stooge+ objects:
+
+  [
+    Stooge.new( "Larry", :curly    ),
+    Stooge.new( "Moe",   :straight ),
+    Stooge.new( "Curly", :none     )
+  ]
+
+(You initialize a +Stooge+ object with it's name and hair style.)
+
+We could have defined our stooges tag to give us access to the name and hair style each stooge:
+
+  define_tag "stooges", :type => :enumerable, :item_expose => [:name, :hair]
+  
+If we had done this, we could now reference the array of +Stooge+ objects in our template
+like this:
+
+  <radius:stooges:each><radius:item:name /> (<radius:item:hair />) </radius:stooges:each>
+
+This would render:
+
+  Larry (curly) Moe (staight) Curly (none)
+  
+Notice how in the tag definition above we used the +item_expose+ option to automatically create
+child tags for the +name+ and +hair+ attributes on each +Stooge+ object. There is one more option
+that you can use which makes this easier. It's the +item_tag+ option. It's useful for changing
+the name of the +item+ tag:
+
+  define_tag "stooges", :type => :enumerable, :item_tag => "stooge", :item_exposes => [:name, :hair]
+
+You could then use this with the following template:
+
+  <radius:stooges:each><radius:stooge:name /> (<radius:stooge:hair />) </radius:stooges:each>
+
+And get the same result. Notice how that this time we can use <tt>stooge:name</tt> and
+<tt>stooge:hair</tt> instead of <tt>item:name</tt> and <tt>item:hair</tt>.
+  
 
 == Altering the Tag Prefix
 

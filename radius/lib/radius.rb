@@ -57,8 +57,8 @@ module Radius
     #                 referenced by tags with a type of 'enumerable'.
     #
     # +type+::        When this option is set to 'enumerable' the following additional
-    #                 tags are added as child tags: +each+, +each:item+, +max+, +min+,
-    #                 +size+, +length+, and +count+.
+    #                 tags are added as child tags: +each+, <tt>each:item</tt>, +max+, 
+    #                 +min+, +size+, +length+, and +count+.
     #
     def define_tag(name, options = {}, &block)
       options = prepare_tag_options(name, options)
@@ -336,7 +336,7 @@ module Radius
     end
   end
   
-  module Util
+  module Util # :nodoc:
     def self.symbolize_keys(hash)
       new_hash = {}
       hash.keys.each do |k|

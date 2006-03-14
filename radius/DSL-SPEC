@@ -1,9 +1,6 @@
 =DSL Specification
 
-I haven't implemented a domain specific languages for Contexts yet, but I am hoping to
-do so in a future release. Below are some thoughts (in code) for how I would like it to
-work. Note that with a robust DSL you will be able to define that certain tags are
-only valid within certain containing tags.
+This is almost completely implemented:
 
   class StoreContext < Radius::Context
     def initialize(options)
@@ -21,7 +18,7 @@ only valid within certain containing tags.
         "*" * @user.password.size
       end
       tag "basket", :for => @cart, :expose => :total
-      tag "basket:items", :for => proc { @cart.items }, :type => :iterable, :item_expose => [:name, :description, :quantity, :price]
+      tag "basket:items", :for => proc { @cart.items }, :type => :enumerable, :item_expose => [:name, :description, :quantity, :price]
     end
   end
 
