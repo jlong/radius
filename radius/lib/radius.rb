@@ -20,7 +20,7 @@ module Radius
     end
   end
   
-  module TagDefinitions
+  module TagDefinitions # :nodoc:
     class TagFactory # :nodoc:
       def initialize(context)
         @context = context
