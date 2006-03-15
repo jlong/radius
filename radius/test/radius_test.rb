@@ -175,6 +175,11 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output "* John (25)\n* James (27)\n", "<r:users:each>* <r:user:name /> (<r:user:age />)\n</r:users:each>"
   end
   
+  def test_tag_option_type_is_undefined
+    e = assert_raises(ArgumentError) { define_tag 'test', :type => :undefined_type }
+    assert_equal "Undefined type `undefined_type' in options hash", e.message
+  end
+  
   def test_parse_fail_on_missing_end_tag
     assert_raises(Radius::MissingEndTagError) { @parser.parse("<r:reverse>") }
     assert_raises(Radius::MissingEndTagError) { @parser.parse("<r:reverse><r:capitalize></r:reverse>") }
