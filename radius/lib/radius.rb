@@ -28,41 +28,53 @@ module Radius
       
       def define_tag(name, options, &block)
         options = prepare_options(name, options)
+        validate_params(name, options, &block)
         construct_tag_set(name, options, &block)
         expose_methods_as_tags(name, options)
       end
       
       protected
 
-        # Override to create custom Tag factories
+        # Adds the tag definition to the context. Override in subclasses to add additional tags
+        # (child tags) when the tag is created.
         def construct_tag_set(name, options, &block)
+          @context.set_item_for(name, options[:for]) if options[:for]
           if block
             @context.definitions[name.to_s] = block
           else
-            @context.define_tag(name, options) do
-              if single?
-                get_for_object(options[:for]).to_s
+            @context.define_tag(name) do |tag|
+              if tag.single?
+                tag.item
               else
-                expand
+                tag.expand
               end
             end
           end
         end
 
-        # Helper method for normalizing options pased to tag definition methods
+        # Normalizes options pased to tag definition. Override in decendants to preform
+        # additional normalizaiton.
         def prepare_options(name, options)
           options = Util.symbolize_keys(options)
-          options[:for] = (options.has_key?(:for) ? options[:for] : name)
-          options[:for] = options[:for].to_s unless options[:for].kind_of? Proc
           options[:expose] = [*options[:expose]].compact.map { |m| m.to_s }
           options
         end
-      
-        # Helper method for exposing the methods of an object as tags
+        
+        # Validates parameters passed to tag definition. Override in decendants to add custom
+        # validations.
+        def validate_params(name, options, &block)
+          unless options.has_key? :for
+            raise ArgumentError.new("tag definition must contain a :for option or a block") unless block
+            raise ArgumentError.new("tag definition must contain a :for option when used with the :expose option") unless options[:expose].empty?
+          end
+        end
+        
+        # Exposes the methods of an object as child tags.
         def expose_methods_as_tags(name, options)
           options[:expose].each do |method|
-            @context.define_tag("#{name}:#{method}") do
-              object = get_for_object(options[:for])
+            tag_name = "#{name}:#{method}"
+            @context.define_tag(tag_name) do |tag|
+              object = tag.item_for(name)
               object.send(method).to_s
             end
           end
@@ -74,37 +86,34 @@ module Radius
         def construct_tag_set(name, options, &block) 
           options[:expose] += ['min', 'max']
           super
-      
-          @context.define_tag "#{name}:size" do
-            object = get_for_object(options[:for])
+          
+          @context.define_tag "#{name}:size" do |tag|
+            object = tag.item_for(name)
             object.entries.size
           end
       
-          @context.define_tag "#{name}:count" do
-            render_tag "#{name}:size"
+          @context.define_tag "#{name}:count" do |tag|
+            tag.context.render_tag "#{name}:size"
           end
       
-          @context.define_tag "#{name}:length" do
-            render_tag "#{name}:size"
+          @context.define_tag "#{name}:length" do |tag|
+            tag.context.render_tag "#{name}:size"
           end
       
-          @context.define_tag "#{name}:each" do
-            object = get_for_object(options[:for])
-            n = qualified_tag_name(name)
+          item_tag_name = "#{name}:each:#{options[:item_tag]}"
+      
+          @context.define_tag "#{name}:each" do |tag|
+            object = tag.item_for(name)
             result = []
             object.each do |item|
-              @enumerable_each_items[n] = item
-              result << expand
+              tag.set_item_for(item_tag_name, item)
+              result << tag.expand
             end 
             result
           end
       
-          @context.define_tag(
-            "#{name}:each:#{options[:item_tag]}",
-            :for => proc { enumerable_item_for(name) },
-            :expose => options[:item_expose]
-          ) do
-            enumerable_item_for(name)
+          @context.define_tag(item_tag_name, :for => nil, :expose => options[:item_expose]) do |tag|
+            tag.item
           end
         end
         
@@ -117,22 +126,77 @@ module Radius
   end
   
   #
-  # An abstract class for creating a Context. A context defines the tags that
-  # are available for use in a template.
+  # A tag binding is passed into each tag definition and contains helper methods for working
+  # with tags. Use it to gain access to the attributes that were passed to the tag, to
+  # render the tag contents, and to do other tasks.
+  #
+  class TagBinding
+    attr_accessor :context
+    attr_reader :name, :attributes, :block
+    alias :attr :attributes
+    
+    def initialize(name, attributes, &block)
+      @name, @attributes, @block = name, attributes, block
+    end
+    
+    # Evaluates the current tag and returns the rendered contents.
+    def expand
+      double? ? block.call : ''
+    end
+
+    # Returns true if the current tag is a single tag.
+    def single?
+      block.nil?
+    end
+
+    # Returns true if the current tag is a double tag.
+    def double?
+      not single?
+    end
+    
+    # Return the item associated with the current tag.
+    def item
+      item_for(@name)
+    end
+    
+    # Associate an item with the current tag.
+    def item=(value)
+      set_item_for(@name, value)
+    end
+    
+    # Get the item associated with another tag.
+    def item_for(tag_name)
+      @context.item_for_tag(tag_name)
+    end
+    
+    # Set the item associated with another tag.
+    def set_item_for(tag_name, value)
+      @context.set_item_for(tag_name, value)
+    end
+    
+    # Return a list of the way tags are nested around the current tag as a string.
+    def nesting
+      @context.current_nesting
+    end
+  end
+  
+  #
+  # A context contains the tag definitions which are available for use in a template.
   #
   class Context
     
-    # The prefix attribute controls the string of text that is helps the parser
+    # The prefix attribute controls the tag prefix that helps the parser
     # identify template tags. By default this attribute is set to "radius", but
-    # you may want to override this when creating your own contexts.
-    attr_accessor :prefix, :definitions
+    # you will probably want to override this when creating your own contexts.
+    attr_accessor :prefix
+    attr_accessor :definitions # :nodoc:
     
     # Creates a new Context object.
     def initialize
       @prefix = 'radius'
       @definitions = {}
-      @tag_render_stack = []
-      @enumerable_each_items = {}
+      @tag_binding_stack = []
+      @items_for_tags = {}
     end
     
     # Creates a tag definition on a context. Several options are available to you
@@ -163,73 +227,61 @@ module Radius
     end
 
     # Returns the value of a rendered tag. Used internally by Parser#parse.
-    def render_tag(tag, attributes = {}, &block)
-      name = qualified_tag_name(tag.to_s)
-      tag_block = @definitions[name]
-      if tag_block
-        stack(name, attributes, block) do
-          instance_eval(&tag_block).to_s
+    def render_tag(name, attributes = {}, &block)
+      tag_definition_block = @definitions[qualified_tag_name(name.to_s)]
+      if tag_definition_block
+        stack(name, attributes, block) do |tag|
+          tag_definition_block.call(tag).to_s
         end
       else
-        tag_missing(tag, attributes, &block)
+        tag_missing(name, attributes, &block)
       end
     end
 
     # Like method_missing for objects, but fired when a tag is undefined.
     # Override in your own Context to change what happens when a tag is
     # undefined. By default this method raises an UndefinedTagError.
-    def tag_missing(tag, attributes, &block)
-      raise UndefinedTagError.new(tag)
+    def tag_missing(name, attributes, &block)
+      raise UndefinedTagError.new(name)
+    end
+
+    # Each tag is allowed to associate a single variable with itself.
+    # This method returns the item associated with a tag.
+    def item_for_tag(name)
+      n = qualified_tag_name(name)
+      @items_for_tags[n]
+    end
+    
+    # Each tag is allowed to associate a single variable with itself.
+    # This method sets that variable.
+    def set_item_for(name, value)
+      n = qualified_tag_name(name)
+      @items_for_tags[n] = value
+    end
+
+    # Returns the state of the current render stack. Useful from inside
+    # a tag definition. Normally just use TagBinding#nesting.
+    def current_nesting
+      @tag_binding_stack.collect { |tag| tag.name }.join(':')
     end
 
     private
 
-      # Returns the attributes for the current tag.
-      def attr
-        @tag_render_stack.last[:attr]
-      end
-      alias :attributes :attr
-
-      # Returns the render block for the current tag.
-      def block
-        @tag_render_stack.last[:block]
-      end
-
-      # Executes the render block for the current tag and returns the
-      # result. Returns and empty string if block is nil.
-      def expand
-        double? ? block.call : ''
-      end
-
-      # Returns true if the current tag is a single tag
-      def single?
-        block.nil?
-      end
-
-      # Returns true if the current tag is a double tag
-      def double?
-        not single?
-      end
-
-      # Returns the current item in the named enumerable loop
-      def enumerable_item_for(name)
-        n = qualified_tag_name(name)
-        @enumerable_each_items[n]
-      end
-
       # A convienence method for managing the various parts of the
-      # tag render stack.
+      # tag binding stack.
       def stack(name, attributes, block)
-        @tag_render_stack.push(:name => name, :attr => attributes, :block => block)
-        result = yield
-        @tag_render_stack.pop
+        binding = TagBinding.new(name, attributes, &block)
+        binding.context = self
+        @tag_binding_stack.push(binding)
+        result = yield(binding)
+        @tag_binding_stack.pop
         result
       end
 
       # Returns a fully qualified tag name based on state of the
-      # tag render stack.
+      # tag binding stack.
       def qualified_tag_name(name)
-        names = @tag_render_stack.collect { |item| item[:name] }
+        names = @tag_binding_stack.collect { |tag| tag.name }
         while names.size > 0
           try = (names + [name]).join(':')
           return try if @definitions.has_key? try 
@@ -237,19 +289,9 @@ module Radius
         end
         name
       end
-
-      # Helper method to return for option object.
-      def get_for_object(for_option)
-        case for_option
-        when Proc
-          instance_eval &for_option
-        else
-          instance_variable_get "@#{for_option}"
-        end
-      end
   end
 
-  class Tag # :nodoc:
+  class ParseTag # :nodoc:
     def initialize(&b)
       @block = b
     end
@@ -263,7 +305,7 @@ module Radius
     end
   end
 
-  class ContainerTag < Tag # :nodoc:
+  class ParseContainerTag < ParseTag # :nodoc:
     attr_accessor :name, :attributes, :contents
     
     def initialize(name = "", attributes = {}, contents = [], &b)
@@ -273,7 +315,7 @@ module Radius
   end
 
   #
-  # The Radius parser. Initialize a parser with the Context object that defines
+  # The Radius parser. Initialize a parser with a Context object that defines
   # how tags should be expanded.
   #
   class Parser
@@ -287,7 +329,7 @@ module Radius
 
     # Parse string for tags, expand them, and return the result.
     def parse(string)
-      @stack = [ContainerTag.new { |t| t.contents.to_s }]
+      @stack = [ParseContainerTag.new { |t| t.contents.to_s }]
       pre_parse(string)
       @stack.last.to_s
     end
@@ -296,7 +338,7 @@ module Radius
       re = %r{<#{@context.prefix}:([\w:]+?)(?:\s+?([^/>]*?)|)>|</#{@context.prefix}:([\w:]+?)\s*?>}
       if md = re.match(text)
         start_tag, attr, end_tag = $1, $2, $3
-        @stack.last.contents << Tag.new { parse_individual(md.pre_match) }
+        @stack.last.contents << ParseTag.new { parse_individual(md.pre_match) }
         remaining = md.post_match
         if start_tag
           parse_start_tag(start_tag, attr, remaining)
@@ -305,7 +347,7 @@ module Radius
         end
       else
         if @stack.length == 1
-          @stack.last.contents << Tag.new { parse_individual(text) }
+          @stack.last.contents << ParseTag.new { parse_individual(text) }
         else
           raise MissingEndTagError.new(@stack.last.name)
         end
@@ -313,7 +355,7 @@ module Radius
     end
 
     def parse_start_tag(start_tag, attr, remaining) # :nodoc:
-      @stack.push(ContainerTag.new(start_tag, parse_attributes(attr)))
+      @stack.push(ParseContainerTag.new(start_tag, parse_attributes(attr)))
       pre_parse(remaining)
     end
 

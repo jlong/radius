@@ -2,26 +2,6 @@
 
 This is almost completely implemented:
 
-  class StoreContext < Radius::Context
-    def initialize(options)
-      @prefix = "r" # all tags must be prefixed with "r"
-      @user = options[:user]
-      @cart = options[:cart]
-      @session = options[:session]
-      build_tags
-    end
-
-    def build_tags
-      tag "user", :expose => [:name, :login, :email]
-      tag "user:session", :expose => :id
-      tag "user:password" do
-        "*" * @user.password.size
-      end
-      tag "basket", :for => @cart, :expose => :total
-      tag "basket:items", :for => proc { @cart.items }, :type => :enumerable, :item_expose => [:name, :description, :quantity, :price]
-    end
-  end
-
   class User
     attr_accessor :name, :login, :password, :email
     def initialize(name, login, password, email)
@@ -101,11 +81,15 @@ This is almost completely implemented:
   )
   session = Session.new('a4bd386e512bacd581')
 
-  context = StoreContext.new(
-    :user => user,
-    :cart => cart,
-    :session => session
-  )
+  context = Radius::Context.define do |r|
+    r.tag "user", :for => user :expose => [:name, :login, :email]
+    r.tag "user:session", :for => session, :expose => :id
+    r.tag "user:password" do
+      "*" * user.password.size
+    end
+    r.tag "basket", :for => cart, :expose => :total
+    r.tag "basket:items", :for => proc { cart.items }, :type => :enumerable, :item_expose => [:name, :description, :quantity, :price]
+  end
 
   template = Radius::Template.new(
     :text => receipt,
@@ -121,3 +105,20 @@ This is almost completely implemented:
 
   # another alternate
   puts Radius.parse(receipt, context)
+  
+  
+  
+  
+  page = Page.new
+  
+  context = Radius::Context.new do |c|
+    c.define_tag "page", :for => page, :expose_attributes => true #default
+    c.define_tag "page:children", :for => page, :method => :children, :item_tag => 'child', :type => :collection
+    c.define_tag "link" do |tag|
+      if (tag.nesting ~= /children/) or (tag.name ~= /^page:link$/ )
+        %{<a href=#{ tag.item_for('child').url }">} + tag.expand + %{</a>}
+      else
+        %{<a href=#{ page.url }">} + tag.expand + %{</a>}
+      end
+    end
+  end
