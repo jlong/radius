@@ -265,33 +265,33 @@ module Radius
     # Creates a tag definition on a context. Several options are available to you
     # when creating a tag:
     # 
-    # +for+::            Specifies an object that the tag is in reference to. This is
-    #                    applicable when a block is not passed to the tag, or when the
-    #                    +expose+ option is also used.
+    # +for+::             Specifies an object that the tag is in reference to. This is
+    #                     applicable when a block is not passed to the tag, or when the
+    #                     +expose+ option is also used.
     #
-    # +expose+::         Specifies that child tags should be set for each of the methods
-    #                    contained in this option. May be either a single symbol/string or
-    #                    an array of symbols/strings.
+    # +expose+::          Specifies that child tags should be set for each of the methods
+    #                     contained in this option. May be either a single symbol/string or
+    #                     an array of symbols/strings.
     #
-    # +attributes+::     Specifies whether or not attributes should be exposed
-    #                    automatically. Useful for ActiveRecord objects. Boolean. Defaults
-    #                    to +true+.
+    # +attributes+::      Specifies whether or not attributes should be exposed
+    #                     automatically. Useful for ActiveRecord objects. Boolean. Defaults
+    #                     to +true+.
     #
-    # +expose_as_items:: Specifies a list of items (strings or symbols) which refer to
-    #                    methods that return items (only applical when the type option
-    #                    is set to 'enumerable' or 'collection').
+    # +expose_as_items+:: Specifies a list of items (strings or symbols) which refer to
+    #                     methods that return items (only applical when the type option
+    #                     is set to 'enumerable' or 'collection').
     #
-    # +item_tag+::       Specifies the name of the item tag (only applicable when the type
-    #                    option is set to 'enumerable' or 'collection').
+    # +item_tag+::        Specifies the name of the item tag (only applicable when the type
+    #                     option is set to 'enumerable' or 'collection').
     #
-    # +item_expose+::    Works like +expose+ except that it exposes methods on items
-    #                    referenced by tags with a type of 'enumerable' or 'collection'.
+    # +item_expose+::     Works like +expose+ except that it exposes methods on items
+    #                     referenced by tags with a type of 'enumerable' or 'collection'.
     #
-    # +type+::           When this option is set to 'enumerable' the following additional
-    #                    tags are added as child tags: +each+, <tt>each:item</tt>, +max+, 
-    #                    +min+, +size+, +length+, and +count+. When set to 'collection'
-    #                    all of the 'enumerable' child tags are added along with +first+
-    #                    and +last+. Value may be specified as a string or symbol.
+    # +type+::            When this option is set to 'enumerable' the following additional
+    #                     tags are added as child tags: +each+, <tt>each:item</tt>, +max+, 
+    #                     +min+, +size+, +length+, and +count+. When set to 'collection'
+    #                     all of the 'enumerable' child tags are added along with +first+
+    #                     and +last+. Value may be specified as a string or symbol.
     #
     def define_tag(name, options = {}, &block)
       type = Util.impartial_hash_delete(options, :type).to_s
