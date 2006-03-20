@@ -19,7 +19,9 @@ example:
     end
     c.define_tag 'repeat' do |tag|
       number = (tag.attr['times'] || '1').to_i
-      number.times { tag.expand }
+      result = ''
+      number.times { result << tag.expand }
+      result
     end
   end
   
