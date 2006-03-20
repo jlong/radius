@@ -56,10 +56,10 @@ module Radius
         # additional normalization.
         def prepare_options(name, options)
           options = Util.symbolize_keys(options)
-          options[:expose] = expand_option(options[:expose])
+          options[:expose] = expand_array_option(options[:expose])
           object = options[:for]
-          options[:expose_attributes] = object.respond_to?(:attributes) unless options.has_key? :expose_attributes
-          options[:expose] += object.attributes if options[:expose_attributes]
+          options[:attributes] = object.respond_to?(:attributes) unless options.has_key? :attributes
+          options[:expose] += object.attributes.keys if options[:attributes]
           options
         end
         
@@ -78,16 +78,16 @@ module Radius
             tag_name = "#{name}:#{method}"
             @context.define_tag(tag_name) do |tag|
               object = tag.item_for(name)
-              object.send(method).to_s
+              object.send(method)
             end
           end
         end
         
-        protected
-        
-          def expand_option(value)
-            [*value].compact.map { |m| m.to_s }
-          end
+      protected
+      
+        def expand_array_option(value)
+          [*value].compact.map { |m| m.to_s.intern }
+        end
     end
     
     class EnumerableTagFactory < TagFactory # :nodoc:
@@ -131,8 +131,8 @@ module Radius
         def prepare_options(name, options)
           options = super
           options[:item_tag] = (options.has_key?(:item_tag) ? options[:item_tag] : 'item').to_s
-          options[:item_expose] = expand_option(options[:item_expose])
-          options[:expose_as_items] = expand_option(options[:expose_as_items])
+          options[:item_expose] = expand_array_option(options[:item_expose])
+          options[:expose_as_items] = expand_array_option(options[:expose_as_items])
           options
         end
         
@@ -151,14 +151,14 @@ module Radius
             options[:item_expose].each do |method|
               @context.define_tag "#{name}:#{exposer}:#{method}" do |tag|
                 object = tag.item_for("#{name}:#{exposer}") || tag.item_for(name).send(exposer)
-                object.send(method)
+                object.send(method) if object
               end
             end
           end
         end
     end
     
-    class CollectionTagFactory < EnumerableTagFactory
+    class CollectionTagFactory < EnumerableTagFactory # :nodoc:
       protected
         def construct_tag_set(name, options, &block)
           options[:expose_as_items] += [:first, :last]
@@ -173,10 +173,22 @@ module Radius
   # render the tag contents, and to do other tasks.
   #
   class TagBinding
+    # The Context that the TagBinding is associated with. Used internally. Try not to use
+    # this object directly.
     attr_accessor :context
-    attr_reader :name, :attributes, :block
+    
+    # The name of the tag (as used in a template string).
+    attr_reader :name
+    
+    # The attributes of the tag. Also aliased as TagBinding#attr.
+    attr_reader :attributes
     alias :attr :attributes
     
+    # The render block. When called expands the contents of the tag. Use TagBinding#expand
+    # instead.
+    attr_reader :block
+    
+    # Creates a new TagBinding object.
     def initialize(name, attributes, &block)
       @name, @attributes, @block = name, attributes, block
     end
@@ -196,27 +208,27 @@ module Radius
       not single?
     end
     
-    # Return the item associated with the current tag.
+    # Returns the item associated with the current tag.
     def item
       item_for(@name)
     end
     
-    # Associate an item with the current tag.
+    # Associates an item with the current tag.
     def item=(value)
       set_item_for(@name, value)
     end
     
-    # Get the item associated with another tag.
+    # Gets the item associated with another tag.
     def item_for(tag_name)
       @context.item_for_tag(tag_name)
     end
     
-    # Set the item associated with another tag.
+    # Sets the item associated with another tag.
     def set_item_for(tag_name, value)
       @context.set_item_for(tag_name, value)
     end
     
-    # Return a list of the way tags are nested around the current tag as a string.
+    # Returns a list of the way tags are nested around the current tag as a string.
     def nesting
       @context.current_nesting
     end
@@ -226,7 +238,7 @@ module Radius
   # A context contains the tag definitions which are available for use in a template.
   #
   class Context
-    
+    # A hash of tag definition blocks that define tags accessible on a Context.
     attr_accessor :definitions # :nodoc:
     
     # Creates a new Context object.
@@ -237,7 +249,14 @@ module Radius
       with(&block) if block_given?
     end
     
-    # Yeild an instance of self for creating tag definitions.
+    # Yeild an instance of self for tag definitions:
+    #
+    #   context.with do |c|
+    #     c.define_tag 'test' do
+    #       'test'
+    #     end
+    #   end
+    #
     def with
       yield self
       self
@@ -245,26 +264,34 @@ module Radius
     
     # Creates a tag definition on a context. Several options are available to you
     # when creating a tag:
-    #
-    # +expose+::      Specifieds that child tags should be set for each of the methods
-    #                 contained in this option. May be either a single symbol or an
-    #                 array of symbols.
     # 
-    # +for+::         Specifies the name for the instance variable that the main
-    #                 tag is in reference to. This is applical when a block is not
-    #                 passed to the tag, or when the +expose+ option is also used.
+    # +for+::            Specifies an object that the tag is in reference to. This is
+    #                    applicable when a block is not passed to the tag, or when the
+    #                    +expose+ option is also used.
     #
-    # +item_tag+::    Specifies the name of the item tag (only applicable when the type
-    #                 option is set to 'enumerable').
+    # +expose+::         Specifies that child tags should be set for each of the methods
+    #                    contained in this option. May be either a single symbol/string or
+    #                    an array of symbols/strings.
     #
-    # +item_expose+:: Works like +expose+ except that it exposes methods on items
-    #                 referenced by tags with a type of 'enumerable'.
+    # +attributes+::     Specifies whether or not attributes should be exposed
+    #                    automatically. Useful for ActiveRecord objects. Boolean. Defaults
+    #                    to +true+.
     #
-    # +type+::        When this option is set to 'enumerable' the following additional
-    #                 tags are added as child tags: +each+, <tt>each:item</tt>, +max+, 
-    #                 +min+, +size+, +length+, and +count+. When set to 'collection'
-    #                 all of the 'enumerable' child tags are added along with +first+
-    #                 and +last+.
+    # +expose_as_items:: Specifies a list of items (strings or symbols) which refer to
+    #                    methods that return items (only applical when the type option
+    #                    is set to 'enumerable' or 'collection').
+    #
+    # +item_tag+::       Specifies the name of the item tag (only applicable when the type
+    #                    option is set to 'enumerable' or 'collection').
+    #
+    # +item_expose+::    Works like +expose+ except that it exposes methods on items
+    #                    referenced by tags with a type of 'enumerable' or 'collection'.
+    #
+    # +type+::           When this option is set to 'enumerable' the following additional
+    #                    tags are added as child tags: +each+, <tt>each:item</tt>, +max+, 
+    #                    +min+, +size+, +length+, and +count+. When set to 'collection'
+    #                    all of the 'enumerable' child tags are added along with +first+
+    #                    and +last+. Value may be specified as a string or symbol.
     #
     def define_tag(name, options = {}, &block)
       type = Util.impartial_hash_delete(options, :type).to_s
@@ -361,12 +388,15 @@ module Radius
   end
 
   #
-  # The Radius parser. Initialize a parser with a Context object that defines
-  # how tags should be expanded.
+  # The Radius parser. Initialize a parser with a Context object that
+  # defines how tags should be expanded.
   #
   class Parser
     # The Context object used to expand template tags.
     attr_accessor :context
+    
+    # The string that prefixes all tags that are expanded by a parser
+    # (the part in the tag name before the first colon).
     attr_accessor :tag_prefix
     
     # Creates a new parser object initialized with a Context.
@@ -387,63 +417,65 @@ module Radius
       @stack.last.to_s
     end
 
-    def pre_parse(text) # :nodoc:
-      re = %r{<#{@tag_prefix}:([\w:]+?)(?:\s+?([^/>]*?)|)>|</#{@tag_prefix}:([\w:]+?)\s*?>}
-      if md = re.match(text)
-        start_tag, attr, end_tag = $1, $2, $3
-        @stack.last.contents << ParseTag.new { parse_individual(md.pre_match) }
-        remaining = md.post_match
-        if start_tag
-          parse_start_tag(start_tag, attr, remaining)
+    protected
+
+      def pre_parse(text)
+        re = %r{<#{@tag_prefix}:([\w:]+?)(?:\s+?([^/>]*?)|)>|</#{@tag_prefix}:([\w:]+?)\s*?>}
+        if md = re.match(text)
+          start_tag, attr, end_tag = $1, $2, $3
+          @stack.last.contents << ParseTag.new { parse_individual(md.pre_match) }
+          remaining = md.post_match
+          if start_tag
+            parse_start_tag(start_tag, attr, remaining)
+          else
+            parse_end_tag(end_tag, remaining)
+          end
         else
-          parse_end_tag(end_tag, remaining)
-        end
-      else
-        if @stack.length == 1
-          @stack.last.contents << ParseTag.new { parse_individual(text) }
-        else
-          raise MissingEndTagError.new(@stack.last.name)
+          if @stack.length == 1
+            @stack.last.contents << ParseTag.new { parse_individual(text) }
+          else
+            raise MissingEndTagError.new(@stack.last.name)
+          end
         end
       end
-    end
 
-    def parse_start_tag(start_tag, attr, remaining) # :nodoc:
-      @stack.push(ParseContainerTag.new(start_tag, parse_attributes(attr)))
-      pre_parse(remaining)
-    end
-
-    def parse_end_tag(end_tag, remaining) # :nodoc:
-      popped = @stack.pop
-      if popped.name == end_tag
-        popped.on_parse { |t| @context.render_tag(popped.name, popped.attributes) { t.contents.to_s } }
-        tag = @stack.last
-        tag.contents << popped
+      def parse_start_tag(start_tag, attr, remaining) # :nodoc:
+        @stack.push(ParseContainerTag.new(start_tag, parse_attributes(attr)))
         pre_parse(remaining)
-      else
-        raise MissingEndTagError.new(popped.name)
       end
-    end
 
-    def parse_individual(text) # :nodoc:
-      re = /<#{@tag_prefix}:([\w:]+?)\s+?(.*?)\s*?\/>/
-      if md = re.match(text)
-        attr = parse_attributes($2)
-        replace = @context.render_tag($1, attr)
-        md.pre_match + replace + parse_individual(md.post_match)
-      else
-        text || ''
+      def parse_end_tag(end_tag, remaining) # :nodoc:
+        popped = @stack.pop
+        if popped.name == end_tag
+          popped.on_parse { |t| @context.render_tag(popped.name, popped.attributes) { t.contents.to_s } }
+          tag = @stack.last
+          tag.contents << popped
+          pre_parse(remaining)
+        else
+          raise MissingEndTagError.new(popped.name)
+        end
       end
-    end
 
-    def parse_attributes(text) # :nodoc:
-      attr = {}
-      re = /(\w+?)\s*=\s*('|")(.*?)\2/
-      while md = re.match(text)
-        attr[$1] = $3
-        text = md.post_match
+      def parse_individual(text) # :nodoc:
+        re = /<#{@tag_prefix}:([\w:]+?)\s+?(.*?)\s*?\/>/
+        if md = re.match(text)
+          attr = parse_attributes($2)
+          replace = @context.render_tag($1, attr)
+          md.pre_match + replace + parse_individual(md.post_match)
+        else
+          text || ''
+        end
       end
-      attr
-    end
+
+      def parse_attributes(text) # :nodoc:
+        attr = {}
+        re = /(\w+?)\s*=\s*('|")(.*?)\2/
+        while md = re.match(text)
+          attr[$1] = $3
+          text = md.post_match
+        end
+        attr
+      end
   end
 
   module Util # :nodoc:

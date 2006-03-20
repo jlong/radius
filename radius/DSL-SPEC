@@ -91,15 +91,6 @@ This is almost completely implemented:
     r.tag "basket:items", :for => proc { cart.items }, :type => :enumerable, :item_expose => [:name, :description, :quantity, :price]
   end
 
-  template = Radius::Template.new(
-    :text => receipt,
-    :context => context
-  )
-
-  template.compile! # based on context parses text into abstract syntax tree
-  puts template.expand # outputs expanded template
-
-  # alternate usage
   parser = Radius::Parser.new(context)
   puts parser.parse(receipt) # compiles and outputs expanded template
 
@@ -112,8 +103,8 @@ This is almost completely implemented:
   page = Page.new
   
   context = Radius::Context.new do |c|
-    c.define_tag "page", :for => page, :expose_attributes => true #default
-    c.define_tag "page:children", :for => page, :method => :children, :item_tag => 'child', :type => :collection
+    c.define_tag "page", :for => page
+    c.define_tag "page:children", :for => page.children, :item_tag => 'child', :type => :collection
     c.define_tag "link" do |tag|
       if (tag.nesting ~= /children/) or (tag.name ~= /^page:link$/ )
         %{<a href=#{ tag.item_for('child').url }">} + tag.expand + %{</a>}

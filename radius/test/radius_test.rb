@@ -112,12 +112,14 @@ class RadiusParserTest < Test::Unit::TestCase
     define_tag "add" do |tag|
       tag.attr["param1"].to_i + tag.attr["param2"].to_i
     end
-    assert_parse_individual_output "<3>", %{<<r:add param1="1" param2='2'/>>}
+    assert_parse_output "<3>", %{<<r:add param1="1" param2='2'/>>}
   end
   
   def test_parse_attributes
-    r = @parser.parse_attributes(%{ a="1" b='2'c="3"d="'" })
-    assert_equal({"a" => "1", "b" => "2", "c" => "3", "d" => "'"}, r)
+    define_tag 'test' do |tag|
+      tag.attr.inspect
+    end
+    assert_parse_output %{{"a"=>"1", "b"=>"2", "c"=>"3", "d"=>"'"}}, %{<r:test a="1" b='2'c="3"d="'" />}
   end
   
   def test_parse_result_is_always_a_string
@@ -180,11 +182,12 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_equal "undefined tag `user:email'", e.message
   end
   
-  def test_tag_expose_attributes_option
+  def test_tag_expose_attributes_option_on_by_default
     define_tag 'user', :for => user_with_attributes
     assert_parse_output 'John', '<r:user:name />'
-    
-    define_tag 'user_without_attributes', :for => user_with_attributes, :expose_attributes => false
+  end
+  def test_tag_expose_attributes_set_to_false
+    define_tag 'user_without_attributes', :for => user_with_attributes, :attributes => false
     assert_raises(Radius::UndefinedTagError) { @parser.parse "<r:user_without_attributes:name />" }
   end
   
@@ -215,6 +218,15 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output "27", "<r:users:min><r:age /></r:users:min>"
     assert_parse_output "John", "<r:users:first:name />"
   end
+  def test_tag_option_type_is_enumerable_with_no_objects
+    define_tag 'array', :for => [], :type => :enumerable
+    assert_parse_output '', '<r:array:max />'
+    assert_parse_output '', '<r:array:each>(<r:item />)</r:array:each>'
+    
+    define_tag 'users', :for => [], :type => :enumerable, :item_expose => [:name, :age]
+    assert_parse_output '', '<r:users:min:name />'
+  end
+  
   def test_tag_option_type_is_collection
     define_tag 'array', :for => [4, 2, 8, 5], :type => :collection
     assert_parse_output '4', '<r:array:first />'
@@ -244,11 +256,6 @@ class RadiusParserTest < Test::Unit::TestCase
       assert_equal(output, r, message)
     end
     
-    def assert_parse_individual_output(output, input, message = nil)
-      r = @parser.parse_individual(input)
-      assert_equal(output, r, message)
-    end
-    
     class User
       attr_accessor :name, :age, :email, :friend
       def initialize(name, age, email)
@@ -261,7 +268,7 @@ class RadiusParserTest < Test::Unit::TestCase
     
     class UserWithAttributes < User
       def attributes
-        [:name, :age, :email]
+        { :name => name, :age => age, :email => email }
       end
     end
     
