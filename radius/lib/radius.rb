@@ -53,10 +53,13 @@ module Radius
         end
 
         # Normalizes options pased to tag definition. Override in decendants to preform
-        # additional normalizaiton.
+        # additional normalization.
         def prepare_options(name, options)
           options = Util.symbolize_keys(options)
-          options[:expose] = [*options[:expose]].compact.map { |m| m.to_s }
+          options[:expose] = expand_option(options[:expose])
+          object = options[:for]
+          options[:expose_attributes] = object.respond_to?(:attributes) unless options.has_key? :expose_attributes
+          options[:expose] += object.attributes if options[:expose_attributes]
           options
         end
         
@@ -79,12 +82,17 @@ module Radius
             end
           end
         end
+        
+        protected
+        
+          def expand_option(value)
+            [*value].compact.map { |m| m.to_s }
+          end
     end
     
     class EnumerableTagFactory < TagFactory # :nodoc:
       protected
         def construct_tag_set(name, options, &block) 
-          options[:expose] += ['min', 'max']
           super
           
           @context.define_tag "#{name}:size" do |tag|
@@ -115,12 +123,46 @@ module Radius
           @context.define_tag(item_tag_name, :for => nil, :expose => options[:item_expose]) do |tag|
             tag.item
           end
+          
+          options[:expose_as_items] += ['min', 'max']
+          expose_items(name, options)
         end
         
         def prepare_options(name, options)
           options = super
           options[:item_tag] = (options.has_key?(:item_tag) ? options[:item_tag] : 'item').to_s
+          options[:item_expose] = expand_option(options[:item_expose])
+          options[:expose_as_items] = expand_option(options[:expose_as_items])
           options
+        end
+        
+        def expose_items(name, options)
+          options[:expose_as_items].each do |exposer|
+            @context.define_tag "#{name}:#{exposer}" do |tag|
+              object = tag.item_for(name)
+              tag.item = object.send(exposer)
+              if tag.single?
+                tag.item
+              else
+                tag.expand
+              end
+            end
+          
+            options[:item_expose].each do |method|
+              @context.define_tag "#{name}:#{exposer}:#{method}" do |tag|
+                object = tag.item_for("#{name}:#{exposer}") || tag.item_for(name).send(exposer)
+                object.send(method)
+              end
+            end
+          end
+        end
+    end
+    
+    class CollectionTagFactory < EnumerableTagFactory
+      protected
+        def construct_tag_set(name, options, &block)
+          options[:expose_as_items] += [:first, :last]
+          super
         end
     end
   end
@@ -185,18 +227,20 @@ module Radius
   #
   class Context
     
-    # The prefix attribute controls the tag prefix that helps the parser
-    # identify template tags. By default this attribute is set to "radius", but
-    # you will probably want to override this when creating your own contexts.
-    attr_accessor :prefix
     attr_accessor :definitions # :nodoc:
     
     # Creates a new Context object.
-    def initialize
-      @prefix = 'radius'
+    def initialize(&block)
       @definitions = {}
       @tag_binding_stack = []
       @items_for_tags = {}
+      with(&block) if block_given?
+    end
+    
+    # Yeild an instance of self for creating tag definitions.
+    def with
+      yield self
+      self
     end
     
     # Creates a tag definition on a context. Several options are available to you
@@ -218,7 +262,9 @@ module Radius
     #
     # +type+::        When this option is set to 'enumerable' the following additional
     #                 tags are added as child tags: +each+, <tt>each:item</tt>, +max+, 
-    #                 +min+, +size+, +length+, and +count+.
+    #                 +min+, +size+, +length+, and +count+. When set to 'collection'
+    #                 all of the 'enumerable' child tags are added along with +first+
+    #                 and +last+.
     #
     def define_tag(name, options = {}, &block)
       type = Util.impartial_hash_delete(options, :type).to_s
@@ -321,10 +367,17 @@ module Radius
   class Parser
     # The Context object used to expand template tags.
     attr_accessor :context
+    attr_accessor :tag_prefix
     
     # Creates a new parser object initialized with a Context.
-    def initialize(context = Context.new)
+    def initialize(context = Context.new, options = {})
+      if context.kind_of?(Hash) and options.empty?
+        options = context
+        context = options[:context] || options['context'] || Context.new
+      end
+      options = Util.symbolize_keys(options)
       @context = context
+      @tag_prefix = options[:tag_prefix]
     end
 
     # Parse string for tags, expand them, and return the result.
@@ -335,7 +388,7 @@ module Radius
     end
 
     def pre_parse(text) # :nodoc:
-      re = %r{<#{@context.prefix}:([\w:]+?)(?:\s+?([^/>]*?)|)>|</#{@context.prefix}:([\w:]+?)\s*?>}
+      re = %r{<#{@tag_prefix}:([\w:]+?)(?:\s+?([^/>]*?)|)>|</#{@tag_prefix}:([\w:]+?)\s*?>}
       if md = re.match(text)
         start_tag, attr, end_tag = $1, $2, $3
         @stack.last.contents << ParseTag.new { parse_individual(md.pre_match) }
@@ -372,7 +425,7 @@ module Radius
     end
 
     def parse_individual(text) # :nodoc:
-      re = /<#{@context.prefix}:([\w:]+?)\s+?(.*?)\s*?\/>/
+      re = /<#{@tag_prefix}:([\w:]+?)\s+?(.*?)\s*?\/>/
       if md = re.match(text)
         attr = parse_attributes($2)
         replace = @context.render_tag($1, attr)

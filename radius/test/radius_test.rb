@@ -2,12 +2,12 @@ require 'test/unit'
 require 'radius'
 
 module RadiusTestHelper
-  class TestContext < Radius::Context
-    def initialize
-      super
-      @prefix = "r"
-      define_tag("reverse"   ) { |tag| tag.expand.reverse }
-      define_tag("capitalize") { |tag| tag.expand.upcase  }
+  class TestContext < Radius::Context; end
+  
+  def new_context
+    Radius::Context.new do |c|
+      c.define_tag("reverse"   ) { |tag| tag.expand.reverse }
+      c.define_tag("capitalize") { |tag| tag.expand.upcase  }
     end
   end
   
@@ -20,12 +20,26 @@ class RadiusContextTest < Test::Unit::TestCase
   include RadiusTestHelper
   
   def setup
-    @context = TestContext.new
+    @context = new_context
   end
   
   def test_initialize
     @context = Radius::Context.new
-    assert_equal 'radius', @context.prefix
+  end
+  
+  def test_initialize_with_block
+    @context = Radius::Context.new do |c|
+      assert_kind_of Radius::Context, c
+      c.define_tag('test') { 'just a test' }
+    end
+    assert_not_equal Hash.new, @context.definitions
+  end
+  
+  def test_with
+    got = @context.with do |c|
+      assert_equal @context, c
+    end
+    assert_equal @context, got
   end
   
   def test_render_tag
@@ -66,8 +80,32 @@ class RadiusParserTest < Test::Unit::TestCase
   include RadiusTestHelper
   
   def setup
-    @context = TestContext.new
-    @parser = Radius::Parser.new(@context)
+    @context = new_context
+    @parser = Radius::Parser.new(@context, :tag_prefix => 'r')
+  end
+  
+  def test_initialize
+    @parser = Radius::Parser.new
+    assert_kind_of Radius::Context, @parser.context
+  end
+  
+  def test_initialize_with_params
+    @parser = Radius::Parser.new(TestContext.new)
+    assert_kind_of TestContext, @parser.context
+    
+    @parser = Radius::Parser.new(:context => TestContext.new)
+    assert_kind_of TestContext, @parser.context
+    
+    @parser = Radius::Parser.new('context' => TestContext.new)
+    assert_kind_of TestContext, @parser.context
+    
+    @parser = Radius::Parser.new(:tag_prefix => 'r')
+    assert_kind_of Radius::Context, @parser.context
+    assert_equal 'r', @parser.tag_prefix
+    
+    @parser = Radius::Parser.new(TestContext.new, :tag_prefix => 'r')
+    assert_kind_of TestContext, @parser.context
+    assert_equal 'r', @parser.tag_prefix
   end
   
   def test_parse_individual_tags_and_parameters
@@ -129,28 +167,28 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output %{Three Stooges: "Larry", "Moe", "Curly"}, %{Three Stooges: <r:each between=", ">"<r:item />"</r:each>}
   end
   
-  class User
-    attr_accessor :name, :age, :email, :friend
-    def initialize(name, age, email)
-      @name, @age, @email = name, age, email
-    end
-  end
-  
   def test_tag_option_for
     define_tag 'fun', :for => 'just for kicks'
     assert_parse_output 'just for kicks', '<r:fun />'
   end
   
   def test_tag_expose_option
-    user = User.new('John', 25, 'test@johnwlong.com')
-    define_tag 'user', :for => user, :expose => ['name', :age]
+    define_tag 'user', :for => users.first, :expose => ['name', :age]
     assert_parse_output 'John', '<r:user:name />'
     assert_parse_output '25', '<r:user><r:age /></r:user>'
     e = assert_raises(Radius::UndefinedTagError) { @parser.parse "<r:user:email />" }
     assert_equal "undefined tag `user:email'", e.message
   end
   
-  def test_tag_must_be_called_a_for_option_if_methods_are_exposed
+  def test_tag_expose_attributes_option
+    define_tag 'user', :for => user_with_attributes
+    assert_parse_output 'John', '<r:user:name />'
+    
+    define_tag 'user_without_attributes', :for => user_with_attributes, :expose_attributes => false
+    assert_raises(Radius::UndefinedTagError) { @parser.parse "<r:user_without_attributes:name />" }
+  end
+  
+  def test_tag_options_must_contain_a_for_option_if_methods_are_exposed
     e = assert_raises(ArgumentError) { define_tag('fun', :expose => :today) { 'test' } }
     assert_equal "tag definition must contain a :for option when used with the :expose option", e.message
   end
@@ -164,19 +202,29 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output '2', '<r:items:min />'
     assert_parse_output '(4)(2)(8)(5)', '<r:items:each>(<r:item />)</r:items:each>'
   end
-  def test_tag_option_for_and_type_is_enumerable
+  def test_tag_option_expose_and_type_is_enumerable
     define_tag 'array', :for => [4, 2, 8, 5], :type => :enumerable, :item_tag => 'number', :expose => [:first, :last]
     assert_parse_output '4', '<r:array:first />'
     assert_parse_output '5', '<r:array:last />'
     assert_parse_output '(4)(2)(8)(5)', '<r:array:each>(<r:number />)</r:array:each>'
   end
-  def test_tag_option_type_is_enumerable_and_exposed_item
-    items = [
-      User.new('John', 25, 'test@johnwlong.com'),
-      User.new('James', 27, 'test@jameslong.com')
-    ]
-    define_tag 'users', :for => items, :type => :enumerable, :item_tag => :user, :item_expose => [:name, :age]
+  def test_tag_option_type_is_enumerable_with_complex_objects
+    define_tag 'users', :for => users, :type => :enumerable, :item_tag => :user, :expose_as_items => :first,  :item_expose => [:name, :age]
     assert_parse_output "* John (25)\n* James (27)\n", "<r:users:each>* <r:user:name /> (<r:user:age />)\n</r:users:each>"
+    assert_parse_output "John", "<r:users:max:name />"
+    assert_parse_output "27", "<r:users:min><r:age /></r:users:min>"
+    assert_parse_output "John", "<r:users:first:name />"
+  end
+  def test_tag_option_type_is_collection
+    define_tag 'array', :for => [4, 2, 8, 5], :type => :collection
+    assert_parse_output '4', '<r:array:first />'
+    assert_parse_output '5', '<r:array:last />'
+    assert_parse_output '(4)(2)(8)(5)', '<r:array:each>(<r:item />)</r:array:each>'
+  end
+  def test_tag_option_type_is_collection_with_complex_objects
+    define_tag 'array', :for => users, :type => :collection, :item_expose => [:name, :age]
+    assert_parse_output 'John', '<r:array:first:name />'
+    assert_parse_output '27', '<r:array:last><r:age /></r:array:last>'
   end
   
   def test_tag_option_type_is_undefined
@@ -199,6 +247,33 @@ class RadiusParserTest < Test::Unit::TestCase
     def assert_parse_individual_output(output, input, message = nil)
       r = @parser.parse_individual(input)
       assert_equal(output, r, message)
+    end
+    
+    class User
+      attr_accessor :name, :age, :email, :friend
+      def initialize(name, age, email)
+        @name, @age, @email = name, age, email
+      end
+      def <=>(other)
+        name <=> other.name
+      end
+    end
+    
+    class UserWithAttributes < User
+      def attributes
+        [:name, :age, :email]
+      end
+    end
+    
+    def users
+      [
+        User.new('John', 25, 'test@johnwlong.com'),
+        User.new('James', 27, 'test@jameslong.com')
+      ]
+    end
+    
+    def user_with_attributes
+      UserWithAttributes.new('John', 25, 'test@johnwlong.com')
     end
   
 end
