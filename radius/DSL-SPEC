@@ -94,11 +94,11 @@ This is almost completely implemented:
   parser = Radius::Parser.new(context)
   puts parser.parse(receipt) # compiles and outputs expanded template
 
-  # another alternate
+  # another alternative
   puts Radius.parse(receipt, context)
   
   
-  
+  # Some scratch code from Radiant CMS:
   
   page = Page.new
   
