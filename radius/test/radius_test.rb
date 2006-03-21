@@ -132,7 +132,7 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output "tset TEST", "<r:reverse>test</r:reverse> <r:capitalize>test</r:capitalize>"
   end
   
-  def test_parse_nesting
+  def test_parse_tag_nesting
     define_tag("parent", :for => '')
     define_tag("parent:child", :for => '')
     define_tag("extra", :for => '')
