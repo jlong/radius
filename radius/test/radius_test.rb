@@ -132,25 +132,22 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output "tset TEST", "<r:reverse>test</r:reverse> <r:capitalize>test</r:capitalize>"
   end
   
-  def test_parse_nested
-    define_tag("outer") { |tag| tag.expand.reverse }
-    define_tag("outer:inner") { |tag| ["renni", tag.expand].join }
-    define_tag("outer:inner:heart") { "heart" }
-    define_tag("outer:branch") { "branch" }
-    assert_parse_output "inner", "<r:outer><r:inner /></r:outer>"
-    assert_parse_output "renni", "<r:outer:inner />"
-    assert_parse_output "heart", "<r:outer:inner:heart />"
-    assert_parse_output "hcnarbinner", "<r:outer><r:inner><r:branch /></r:inner></r:outer>"
-    assert_raises(Radius::UndefinedTagError) { @parser.parse("<r:inner />") }
-  end
-  
-  def test_nesting
-    define_tag("outer", :for => '')
-    define_tag("outer:inner", :for => '')
+  def test_parse_nesting
+    define_tag("parent", :for => '')
+    define_tag("parent:child", :for => '')
+    define_tag("extra", :for => '')
     define_tag("nesting") { |tag| tag.nesting }
+    define_tag("extra:nesting") { |tag| tag.nesting.gsub(':', ' > ') }
+    define_tag("parent:child:nesting") { |tag| tag.nesting.gsub(':', ' * ') }
     assert_parse_output "nesting", "<r:nesting />"
-    assert_parse_output "outer:nesting", "<r:outer><r:nesting /></r:outer>"
-    assert_parse_output "outer:inner:nesting", "<r:outer><r:inner><r:nesting /></r:inner></r:outer>"
+    assert_parse_output "parent:nesting", "<r:parent:nesting />"
+    assert_parse_output "extra > nesting", "<r:extra:nesting />"
+    assert_parse_output "parent * child * nesting", "<r:parent:child:nesting />"
+    assert_parse_output "parent > extra > nesting", "<r:parent:extra:nesting />"
+    assert_parse_output "parent > child > extra > nesting", "<r:parent:child:extra:nesting />"
+    assert_parse_output "parent:extra:child:nesting", "<r:parent:extra:child:nesting />"
+    assert_parse_output "extra * parent * child * nesting", "<r:extra:parent:child:nesting />"
+    assert_raises(Radius::UndefinedTagError) { @parser.parse("<r:child />") }
   end
   
   def test_parse_loops

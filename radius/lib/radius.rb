@@ -354,13 +354,25 @@ module Radius
       # Returns a fully qualified tag name based on state of the
       # tag binding stack.
       def qualified_tag_name(name)
-        names = @tag_binding_stack.collect { |tag| tag.name }
-        while names.size > 0
-          try = (names + [name]).join(':')
-          return try if @definitions.has_key? try 
-          names.pop
+        n = name
+        loop do
+          tag_name = scan_stack_for_tag_name(n)
+          return tag_name if tag_name
+          break unless n =~ /^(.*?):(.*)$/
+          n = $2
         end
         name
+      end
+      
+      def scan_stack_for_tag_name(name)
+        names = @tag_binding_stack.collect { |tag| tag.name }
+        loop do
+          try = (names + [name]).join(':')
+          return try if @definitions.has_key? try
+          names.pop
+          break unless names.size > 0
+        end
+        nil
       end
   end
 
