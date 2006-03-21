@@ -162,6 +162,25 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output 'parent:child:content', '<r:parent><r:child:content /></r:parent>'
   end
   
+  def test_parse_tag__binding_do_missing
+    define_tag 'test' do |tag|
+      tag.missing!
+    end
+    e = assert_raises(Radius::UndefinedTagError) { @parser.parse("<r:test />") }
+    assert_equal "undefined tag `test'", e.message
+  end
+  
+  def test_parse_tag__binding_render_tag
+    define_tag('test') { |tag| "Hello #{tag.attr['name']}!" }
+    define_tag('hello') { |tag| tag.render('test', tag.attr) }
+    assert_parse_output 'Hello John!', '<r:hello name="John" />'
+  end
+  def test_parse_tag__binding_render_tag_with_block
+    define_tag('test') { |tag| "Hello #{tag.expand}!" }
+    define_tag('hello') { |tag| tag.render('test') { tag.expand } }
+    assert_parse_output 'Hello John!', '<r:hello>John</r:hello>'
+  end
+  
   def test_parse_loops
     @item = nil
     define_tag "each" do |tag|

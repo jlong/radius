@@ -232,6 +232,16 @@ module Radius
     def nesting
       @context.current_nesting
     end
+    
+    # Fires off Context#tag_missing for the curren tag.
+    def missing!
+      @context.tag_missing(name, attributes, &block)
+    end
+    
+    # Using the context render the tag.
+    def render(tag, attributes = {}, &block)
+      @context.render_tag(tag, attributes, &block)
+    end
   end
   
   #
