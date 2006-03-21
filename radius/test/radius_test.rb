@@ -143,11 +143,23 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output "parent:nesting", "<r:parent:nesting />"
     assert_parse_output "extra > nesting", "<r:extra:nesting />"
     assert_parse_output "parent * child * nesting", "<r:parent:child:nesting />"
+    assert_parse_output "parent * child * nesting", "<r:parent><r:child:nesting /></r:parent>"
     assert_parse_output "parent > extra > nesting", "<r:parent:extra:nesting />"
     assert_parse_output "parent > child > extra > nesting", "<r:parent:child:extra:nesting />"
     assert_parse_output "parent:extra:child:nesting", "<r:parent:extra:child:nesting />"
     assert_parse_output "extra * parent * child * nesting", "<r:extra:parent:child:nesting />"
+    assert_parse_output "extra > parent > nesting", "<r:extra><r:parent:nesting /></r:extra>"
+    assert_parse_output "extra > parent > child > nesting", "<r:extra:parent><r:child:nesting /></r:extra:parent>"
     assert_raises(Radius::UndefinedTagError) { @parser.parse("<r:child />") }
+  end
+  
+  def test_parse_tag_nesting_2
+    define_tag("parent", :for => '')
+    define_tag("parent:child", :for => '')
+    define_tag "content" do |tag|
+      tag.nesting
+    end
+    assert_parse_output 'parent:child:content', '<r:parent><r:child:content /></r:parent>'
   end
   
   def test_parse_loops

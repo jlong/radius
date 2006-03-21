@@ -365,12 +365,12 @@ module Radius
       end
       
       def scan_stack_for_tag_name(name)
-        names = @tag_binding_stack.collect { |tag| tag.name }
+        names = @tag_binding_stack.collect { |tag| tag.name }.join(':').split(':')
         loop do
           try = (names + [name]).join(':')
           return try if @definitions.has_key? try
-          names.pop
           break unless names.size > 0
+          names.pop
         end
         nil
       end
