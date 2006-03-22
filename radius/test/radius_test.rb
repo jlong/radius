@@ -8,6 +8,7 @@ module RadiusTestHelper
     Radius::Context.new do |c|
       c.define_tag("reverse"   ) { |tag| tag.expand.reverse }
       c.define_tag("capitalize") { |tag| tag.expand.upcase  }
+      c.define_tag("attr")       { |tag| tag.attr.inspect }
     end
   end
   
@@ -116,10 +117,28 @@ class RadiusParserTest < Test::Unit::TestCase
   end
   
   def test_parse_attributes
-    define_tag 'test' do |tag|
-      tag.attr.inspect
-    end
-    assert_parse_output %{{"a"=>"1", "b"=>"2", "c"=>"3", "d"=>"'"}}, %{<r:test a="1" b='2'c="3"d="'" />}
+    attributes = %{{"a"=>"1", "b"=>"2", "c"=>"3", "d"=>"'"}}
+    assert_parse_output attributes, %{<r:attr a="1" b='2'c="3"d="'" />}
+    assert_parse_output attributes, %{<r:attr a="1" b='2'c="3"d="'"></r:attr>}
+  end
+  
+  def test_parse_attributes_with_slashes_or_angle_brackets
+    slash = %{{"slash"=>"/"}}
+    angle = %{{"angle"=>">"}}
+    assert_parse_output slash, %{<r:attr slash="/"></r:attr>}
+    assert_parse_output slash, %{<r:attr slash="/"><r:attr /></r:attr>}
+    assert_parse_output angle, %{<r:attr angle=">"></r:attr>}
+  end
+  
+  def test_things_that_should_be_left_alone
+    # The parser currently fails on these assertions
+    #assert_parsed_either_way_is_unchanged %{ test="2"="4" }
+    #assert_parsed_either_way_is_unchanged %{="2" }
+  end
+  
+  def assert_parsed_either_way_is_unchanged(middle)
+    assert_parsed_is_unchanged %{<r:attr#{middle}/>}
+    assert_parsed_is_unchanged %{<r:attr#{middle}></r:attr>}
   end
   
   def test_parse_result_is_always_a_string
@@ -277,11 +296,15 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_raises(Radius::MissingEndTagError) { @parser.parse("<r:reverse><r:capitalize></r:reverse>") }
   end
   
-  private
+  protected
   
     def assert_parse_output(output, input, message = nil)
       r = @parser.parse(input)
       assert_equal(output, r, message)
+    end
+    
+    def assert_parsed_is_unchanged(something)
+      assert_parse_output something, something
     end
     
     class User

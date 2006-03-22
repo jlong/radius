@@ -442,9 +442,9 @@ module Radius
     protected
 
       def pre_parse(text)
-        re = %r{<#{@tag_prefix}:([\w:]+?)(?:\s+?([^/>]*?)|)>|</#{@tag_prefix}:([\w:]+?)\s*?>}
+        re = %r{<#{@tag_prefix}:([\w:]+?)(\s+(?:\w+\s*=\s*(["']).*?\3\s*)*|)>|</#{@tag_prefix}:([\w:]+?)\s*>}
         if md = re.match(text)
-          start_tag, attr, end_tag = $1, $2, $3
+          start_tag, attr, end_tag = $1, $2, $4
           @stack.last.contents << ParseTag.new { parse_individual(md.pre_match) }
           remaining = md.post_match
           if start_tag
@@ -479,7 +479,7 @@ module Radius
       end
 
       def parse_individual(text) # :nodoc:
-        re = /<#{@tag_prefix}:([\w:]+?)\s+?(.*?)\s*?\/>/
+        re = %r{<#{@tag_prefix}:([\w:]+?)(\s+(?:\w+\s*=\s*(["']).*?\3\s*)*|)/>}
         if md = re.match(text)
           attr = parse_attributes($2)
           replace = @context.render_tag($1, attr)

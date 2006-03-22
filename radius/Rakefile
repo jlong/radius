@@ -44,3 +44,17 @@ Rake::GemPackageTask.new(spec) do |pkg|
   pkg.need_zip = true
   pkg.need_tar = true
 end
+
+desc "Uninstall Gem"
+task :uninstall_gem do
+  sh "gem uninstall radius" rescue nil
+end
+
+desc "Build and install Gem from source"
+task :install_gem => [:package, :uninstall_gem] do
+  dir = File.join(File.dirname(__FILE__), 'pkg')
+  chdir(dir) do
+    latest = Dir['radius-*.gem'].last
+    sh "gem install #{latest}"
+  end
+end
