@@ -113,3 +113,57 @@ This is almost completely implemented:
       end
     end
   end
+  
+  
+  <r:page>
+    <r:title /> => "Page Title"
+    <r:find url="/en/news/">
+      <r:title /> => "News Archives"
+      <r:page:title /> => "Page Title"
+      <r:children:each> => News archives children
+
+      </r:children:each>
+    <r:find>
+  </r:page>
+
+  <r:page:find_all match="/en/news/*/">
+    <r:page:title />
+  </r:page:find>
+
+  define_tag "page" do |tag|
+    tag.local.page = @page
+    tag.expand
+  end
+
+  define_tag "page:find" do |tag|
+    tag.local.page = result_of_find
+    tag.expand
+  end
+  
+  define_tag "page:children" do |tag|
+    tag.local.children = tag.local.page.children
+    tag.expand
+  end
+  
+  define_tag "page:children:each" do |tag|
+    children = tag.local.children
+    result = ''
+    children.each do |child|
+      tag.local.page = child
+      result << tag.expand
+    end
+    result
+  end
+
+  define_tag "page:title" do |tag|
+    page = tag.local.page
+    page.title
+  end
+
+  The short hand form of a tag:
+
+  <r:page:title />
+
+  Should be the equivalent of saying:
+
+  <r:page><r:title /></r:page>
