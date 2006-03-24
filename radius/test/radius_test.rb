@@ -135,12 +135,7 @@ class RadiusParserTest < Test::Unit::TestCase
     #assert_parsed_either_way_is_unchanged %{ test="2"="4" }
     #assert_parsed_either_way_is_unchanged %{="2" }
   end
-  
-  def assert_parsed_either_way_is_unchanged(middle)
-    assert_parsed_is_unchanged %{<r:attr#{middle}/>}
-    assert_parsed_is_unchanged %{<r:attr#{middle}></r:attr>}
-  end
-  
+    
   def test_parse_result_is_always_a_string
     define_tag("twelve") { 12 }
     assert_parse_output "12", "<r:twelve />"
@@ -163,8 +158,11 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output "extra > nesting", "<r:extra:nesting />"
     assert_parse_output "parent * child * nesting", "<r:parent:child:nesting />"
     assert_parse_output "parent * child * nesting", "<r:parent><r:child:nesting /></r:parent>"
+    assert_parse_output "parent > extra > nesting", "<r:parent><r:extra><r:nesting /></r:extra></r:parent>"
     assert_parse_output "parent > extra > nesting", "<r:parent:extra:nesting />"
+    assert_parse_output "parent > child > extra > nesting", "<r:parent><r:child><r:extra><r:nesting /></r:extra></r:child></r:parent>"
     assert_parse_output "parent > child > extra > nesting", "<r:parent:child:extra:nesting />"
+    assert_parse_output "parent:extra:child:nesting", "<r:parent><r:extra><r:child><r:nesting /></r:child></r:extra></r:parent>"
     assert_parse_output "parent:extra:child:nesting", "<r:parent:extra:child:nesting />"
     assert_parse_output "extra * parent * child * nesting", "<r:extra:parent:child:nesting />"
     assert_parse_output "extra > parent > nesting", "<r:extra><r:parent:nesting /></r:extra>"
@@ -200,7 +198,37 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output 'Hello John!', '<r:hello>John</r:hello>'
   end
   
-  def test_parse_loops
+  def test_tag_locals
+    define_tag "outer" do |tag|
+      tag.locals.var = 'outer'
+      tag.expand
+    end
+    define_tag "outer:inner" do |tag|
+      tag.locals.var = 'inner'
+      tag.expand
+    end
+    define_tag "outer:var" do |tag|
+      tag.locals.var
+    end
+    assert_parse_output 'outer', "<r:outer><r:var /></r:outer>"
+    assert_parse_output 'outer:inner:outer', "<r:outer><r:var />:<r:inner><r:var /></r:inner>:<r:var /></r:outer>"
+    assert_parse_output 'outer:inner:outer:inner:outer', "<r:outer><r:var />:<r:inner><r:var />:<r:outer><r:var /></r:outer>:<r:var /></r:inner>:<r:var /></r:outer>"
+    assert_parse_output 'outer', "<r:outer:var />"
+  end
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  def xtest_parse_loops
     @item = nil
     define_tag "each" do |tag|
       result = []
@@ -216,12 +244,12 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output %{Three Stooges: "Larry", "Moe", "Curly"}, %{Three Stooges: <r:each between=", ">"<r:item />"</r:each>}
   end
   
-  def test_tag_option_for
+  def xtest_tag_option_for
     define_tag 'fun', :for => 'just for kicks'
     assert_parse_output 'just for kicks', '<r:fun />'
   end
   
-  def test_tag_expose_option
+  def xtest_tag_expose_option
     define_tag 'user', :for => users.first, :expose => ['name', :age]
     assert_parse_output 'John', '<r:user:name />'
     assert_parse_output '25', '<r:user><r:age /></r:user>'
@@ -229,21 +257,21 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_equal "undefined tag `user:email'", e.message
   end
   
-  def test_tag_expose_attributes_option_on_by_default
+  def xtest_tag_expose_attributes_option_on_by_default
     define_tag 'user', :for => user_with_attributes
     assert_parse_output 'John', '<r:user:name />'
   end
-  def test_tag_expose_attributes_set_to_false
+  def xtest_tag_expose_attributes_set_to_false
     define_tag 'user_without_attributes', :for => user_with_attributes, :attributes => false
     assert_raises(Radius::UndefinedTagError) { @parser.parse "<r:user_without_attributes:name />" }
   end
   
-  def test_tag_options_must_contain_a_for_option_if_methods_are_exposed
+  def xtest_tag_options_must_contain_a_for_option_if_methods_are_exposed
     e = assert_raises(ArgumentError) { define_tag('fun', :expose => :today) { 'test' } }
     assert_equal "tag definition must contain a :for option when used with the :expose option", e.message
   end
   
-  def test_tag_option_type_is_enumerable
+  def xtest_tag_option_type_is_enumerable
     define_tag 'items', :for => [4, 2, 8, 5], :type => :enumerable
     assert_parse_output '4', '<r:items:size />'
     assert_parse_output '4', '<r:items:count />'
@@ -252,20 +280,20 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output '2', '<r:items:min />'
     assert_parse_output '(4)(2)(8)(5)', '<r:items:each>(<r:item />)</r:items:each>'
   end
-  def test_tag_option_expose_and_type_is_enumerable
+  def xtest_tag_option_expose_and_type_is_enumerable
     define_tag 'array', :for => [4, 2, 8, 5], :type => :enumerable, :item_tag => 'number', :expose => [:first, :last]
     assert_parse_output '4', '<r:array:first />'
     assert_parse_output '5', '<r:array:last />'
     assert_parse_output '(4)(2)(8)(5)', '<r:array:each>(<r:number />)</r:array:each>'
   end
-  def test_tag_option_type_is_enumerable_with_complex_objects
+  def xtest_tag_option_type_is_enumerable_with_complex_objects
     define_tag 'users', :for => users, :type => :enumerable, :item_tag => :user, :expose_as_items => :first,  :item_expose => [:name, :age]
     assert_parse_output "* John (25)\n* James (27)\n", "<r:users:each>* <r:user:name /> (<r:user:age />)\n</r:users:each>"
     assert_parse_output "John", "<r:users:max:name />"
     assert_parse_output "27", "<r:users:min><r:age /></r:users:min>"
     assert_parse_output "John", "<r:users:first:name />"
   end
-  def test_tag_option_type_is_enumerable_with_no_objects
+  def xtest_tag_option_type_is_enumerable_with_no_objects
     define_tag 'array', :for => [], :type => :enumerable
     assert_parse_output '', '<r:array:max />'
     assert_parse_output '', '<r:array:each>(<r:item />)</r:array:each>'
@@ -274,19 +302,19 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output '', '<r:users:min:name />'
   end
   
-  def test_tag_option_type_is_collection
+  def xtest_tag_option_type_is_collection
     define_tag 'array', :for => [4, 2, 8, 5], :type => :collection
     assert_parse_output '4', '<r:array:first />'
     assert_parse_output '5', '<r:array:last />'
     assert_parse_output '(4)(2)(8)(5)', '<r:array:each>(<r:item />)</r:array:each>'
   end
-  def test_tag_option_type_is_collection_with_complex_objects
+  def xtest_tag_option_type_is_collection_with_complex_objects
     define_tag 'array', :for => users, :type => :collection, :item_expose => [:name, :age]
     assert_parse_output 'John', '<r:array:first:name />'
     assert_parse_output '27', '<r:array:last><r:age /></r:array:last>'
   end
   
-  def test_tag_option_type_is_undefined
+  def xtest_tag_option_type_is_undefined
     e = assert_raises(ArgumentError) { define_tag 'test', :type => :undefined_type }
     assert_equal "Undefined type `undefined_type' in options hash", e.message
   end
@@ -305,6 +333,11 @@ class RadiusParserTest < Test::Unit::TestCase
     
     def assert_parsed_is_unchanged(something)
       assert_parse_output something, something
+    end
+    
+    def assert_parsed_either_way_is_unchanged(middle)
+      assert_parsed_is_unchanged %{<r:attr#{middle}/>}
+      assert_parsed_is_unchanged %{<r:attr#{middle}></r:attr>}
     end
     
     class User

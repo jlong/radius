@@ -167,6 +167,36 @@ module Radius
     end
   end
   
+  class TagLocals
+    attr_accessor :object
+    
+    def initialize(object = nil)
+      @object = object
+      @hash = {}
+    end
+    
+    def method_missing(method, *args, &block)
+      symbol = (method.to_s =~ /^(.*?)=$/) ? $1.intern : method
+      if (0..1).include?(args.size)
+        if args.size == 1
+          @hash[symbol] = args.first
+        else
+          if @hash.has_key?(symbol)
+            @hash[symbol]
+          else
+            unless object.nil?
+              @object.send(method, *args, &block)
+            else
+              nil
+            end
+          end
+        end
+      else
+        super
+      end
+    end
+  end
+  
   #
   # A tag binding is passed into each tag definition and contains helper methods for working
   # with tags. Use it to gain access to the attributes that were passed to the tag, to
@@ -175,7 +205,10 @@ module Radius
   class TagBinding
     # The Context that the TagBinding is associated with. Used internally. Try not to use
     # this object directly.
-    attr_accessor :context
+    attr_reader :context
+    
+    # The TagLocals object for the current tag.
+    attr_reader :locals
     
     # The name of the tag (as used in a template string).
     attr_reader :name
@@ -189,8 +222,8 @@ module Radius
     attr_reader :block
     
     # Creates a new TagBinding object.
-    def initialize(name, attributes, &block)
-      @name, @attributes, @block = name, attributes, block
+    def initialize(context, locals, name, attributes, block)
+      @context, @locals, @name, @attributes, @block = context, locals, name, attributes, block
     end
     
     # Evaluates the current tag and returns the rendered contents.
@@ -311,13 +344,17 @@ module Radius
 
     # Returns the value of a rendered tag. Used internally by Parser#parse.
     def render_tag(name, attributes = {}, &block)
-      tag_definition_block = @definitions[qualified_tag_name(name.to_s)]
-      if tag_definition_block
-        stack(name, attributes, block) do |tag|
-          tag_definition_block.call(tag).to_s
-        end
+      if name =~ /^(.+?):(.+)$/
+        render_tag($1) { render_tag($2, attributes, &block) }
       else
-        tag_missing(name, attributes, &block)
+        tag_definition_block = @definitions[qualified_tag_name(name.to_s)]
+        if tag_definition_block
+          stack(name, attributes, block) do |tag|
+            tag_definition_block.call(tag).to_s
+          end
+        else
+          tag_missing(name, attributes, &block)
+        end
       end
     end
 
@@ -353,8 +390,10 @@ module Radius
       # A convienence method for managing the various parts of the
       # tag binding stack.
       def stack(name, attributes, block)
-        binding = TagBinding.new(name, attributes, &block)
-        binding.context = self
+        previous = @tag_binding_stack.last
+        previous_locals = previous.nil? ? nil : previous.locals
+        locals = TagLocals.new(previous_locals)
+        binding = TagBinding.new(self, locals, name, attributes, block)
         @tag_binding_stack.push(binding)
         result = yield(binding)
         @tag_binding_stack.pop
@@ -364,25 +403,17 @@ module Radius
       # Returns a fully qualified tag name based on state of the
       # tag binding stack.
       def qualified_tag_name(name)
-        n = name
-        loop do
-          tag_name = scan_stack_for_tag_name(n)
-          return tag_name if tag_name
-          break unless n =~ /^(.*?):(.*)$/
-          n = $2
-        end
-        name
-      end
-      
-      def scan_stack_for_tag_name(name)
-        names = @tag_binding_stack.collect { |tag| tag.name }.join(':').split(':')
-        loop do
-          try = (names + [name]).join(':')
-          return try if @definitions.has_key? try
-          break unless names.size > 0
+        names = @tag_binding_stack.collect { |tag| tag.name }
+        while names.size > 0 do
+          round = names.dup
+          while round.size > 0 do
+            try = (round + [name]).join(':')
+            return try if @definitions.has_key? try
+            round.shift
+          end
           names.pop
         end
-        nil
+        name
       end
   end
 
