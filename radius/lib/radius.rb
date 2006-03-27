@@ -403,17 +403,42 @@ module Radius
       # Returns a fully qualified tag name based on state of the
       # tag binding stack.
       def qualified_tag_name(name)
-        names = @tag_binding_stack.collect { |tag| tag.name }
-        while names.size > 0 do
-          round = names.dup
-          while round.size > 0 do
-            try = (round + [name]).join(':')
-            return try if @definitions.has_key? try
-            round.shift
+        nesting_parts = @tag_binding_stack.collect { |tag| tag.name }
+        nesting_parts << name unless nesting_parts.last == name
+        specific_name = nesting_parts.join(':') # specific_name always has the highest specificity
+        unless @definitions.has_key? specific_name
+          possible_matches = @definitions.keys.grep(/(^|:)#{name}$/)
+          specificity_pairs = possible_matches.collect { |tag| [numeric_specificity(tag, nesting_parts), tag] }
+          specificity = Hash[*specificity_pairs.flatten]
+          max = specificity.keys.max
+          if max != 0
+            specificity[max]
+          else
+            name
           end
-          names.pop
+        else
+          specific_name
         end
-        name
+      end
+      
+      # Returns the specificity for +tag_name+ at nesting defined by +nesting_parts+ as a number.
+      def numeric_specificity(tag_name, nesting_parts)
+        nesting_parts = nesting_parts.dup
+        name_parts = tag_name.split(':')
+        specificity = 0
+        value = 1
+        if nesting_parts.last == name_parts.last
+          while nesting_parts.size > 0
+            if nesting_parts.last == name_parts.last
+              specificity += value
+              name_parts.pop
+            end
+            nesting_parts.pop
+            value *= 0.1
+          end
+          specificity = 0 if (name_parts.size > 0)
+        end
+        specificity
       end
   end
 

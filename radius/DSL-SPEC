@@ -160,10 +160,60 @@ This is almost completely implemented:
     page.title
   end
 
-  The short hand form of a tag:
+= Shorthand
+
+The short hand form of a tag:
 
   <r:page:title />
 
-  Should be the equivalent of saying:
+Should be the equivalent of saying:
 
   <r:page><r:title /></r:page>
+  
+
+= Specificity  
+  
+Given the following tag definitions:
+
+  nesting
+  extra:nesting
+  parent:child:nesting
+
+And the following in a template:
+
+  <r:parent:extra:child:nesting />
+
+The following specificity values should be assigned to each of the tags:
+
+  nesting => 1.0.0.0
+  extra:nesting => 1.0.1.0
+  parent:child:nesting => 1.1.0.1
+
+Meaning that the parent:child:nesting tag should win. In the case of the following
+tag in a template:
+
+  <r:parent:child:extra:nesting />
+
+The following specificity values should be assigned to each of the tags:
+
+  nesting => 1.0.0.0
+  extra:nesting => 1.1.0.0
+  parent:child:nesting => 1.0.1.1
+
+Meaning that extra:nesting would win because it is more "specific".
+
+Values are assigned by assigning point values to each of the tags from right to
+left. Given a tag found in a template with nesting four levels deep, the maximum
+specificity a tag could be assigned would be:
+
+  1.1.1.1
+
+One point for each of the levels. In the first example above, this would be a tag
+defined for:
+
+  parent:extra:child:nesting
+
+When looking up a tag, specificity values should be calculated for all tags
+(which could apply in the current situation), and then the one with the highest
+value should be returned.
+

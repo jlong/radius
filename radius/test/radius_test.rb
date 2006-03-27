@@ -157,16 +157,14 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output "parent:nesting", "<r:parent:nesting />"
     assert_parse_output "extra > nesting", "<r:extra:nesting />"
     assert_parse_output "parent * child * nesting", "<r:parent:child:nesting />"
-    assert_parse_output "parent * child * nesting", "<r:parent><r:child:nesting /></r:parent>"
-    assert_parse_output "parent > extra > nesting", "<r:parent><r:extra><r:nesting /></r:extra></r:parent>"
     assert_parse_output "parent > extra > nesting", "<r:parent:extra:nesting />"
-    assert_parse_output "parent > child > extra > nesting", "<r:parent><r:child><r:extra><r:nesting /></r:extra></r:child></r:parent>"
     assert_parse_output "parent > child > extra > nesting", "<r:parent:child:extra:nesting />"
-    assert_parse_output "parent:extra:child:nesting", "<r:parent><r:extra><r:child><r:nesting /></r:child></r:extra></r:parent>"
-    assert_parse_output "parent:extra:child:nesting", "<r:parent:extra:child:nesting />"
+    assert_parse_output "parent * extra * child * nesting", "<r:parent:extra:child:nesting />"
+    assert_parse_output "parent > extra > child > extra > nesting", "<r:parent:extra:child:extra:nesting />"
+    assert_parse_output "parent > extra > child > extra > nesting", "<r:parent><r:extra><r:child><r:extra><r:nesting /></r:extra></r:child></r:extra></r:parent>"
     assert_parse_output "extra * parent * child * nesting", "<r:extra:parent:child:nesting />"
     assert_parse_output "extra > parent > nesting", "<r:extra><r:parent:nesting /></r:extra>"
-    assert_parse_output "extra > parent > child > nesting", "<r:extra:parent><r:child:nesting /></r:extra:parent>"
+    assert_parse_output "extra * parent * child * nesting", "<r:extra:parent><r:child:nesting /></r:extra:parent>"
     assert_raises(Radius::UndefinedTagError) { @parser.parse("<r:child />") }
   end
   
@@ -216,30 +214,18 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output 'outer', "<r:outer:var />"
   end
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  def xtest_parse_loops
+  def test_parse_loops
     @item = nil
     define_tag "each" do |tag|
       result = []
       ["Larry", "Moe", "Curly"].each do |item|
-        tag.set_item_for('each:item', item)
+        tag.locals.item = item
         result << tag.expand
       end
       result.join(tag.attr["between"] || "")
     end
     define_tag "each:item" do |tag|
-      tag.item
+      tag.locals.item
     end
     assert_parse_output %{Three Stooges: "Larry", "Moe", "Curly"}, %{Three Stooges: <r:each between=", ">"<r:item />"</r:each>}
   end
