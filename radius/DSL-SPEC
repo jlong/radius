@@ -162,7 +162,7 @@ This is almost completely implemented:
 
 = Shorthand
 
-The short hand form of a tag:
+The shorthand form of a tag:
 
   <r:page:title />
 

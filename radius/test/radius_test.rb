@@ -230,79 +230,31 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output %{Three Stooges: "Larry", "Moe", "Curly"}, %{Three Stooges: <r:each between=", ">"<r:item />"</r:each>}
   end
   
-  def xtest_tag_option_for
+  def test_tag_option_for
     define_tag 'fun', :for => 'just for kicks'
     assert_parse_output 'just for kicks', '<r:fun />'
   end
   
-  def xtest_tag_expose_option
+  def test_tag_expose_option
     define_tag 'user', :for => users.first, :expose => ['name', :age]
     assert_parse_output 'John', '<r:user:name />'
     assert_parse_output '25', '<r:user><r:age /></r:user>'
     e = assert_raises(Radius::UndefinedTagError) { @parser.parse "<r:user:email />" }
-    assert_equal "undefined tag `user:email'", e.message
+    assert_equal "undefined tag `email'", e.message
   end
   
-  def xtest_tag_expose_attributes_option_on_by_default
+  def test_tag_expose_attributes_option_on_by_default
     define_tag 'user', :for => user_with_attributes
     assert_parse_output 'John', '<r:user:name />'
   end
-  def xtest_tag_expose_attributes_set_to_false
+  def test_tag_expose_attributes_set_to_false
     define_tag 'user_without_attributes', :for => user_with_attributes, :attributes => false
     assert_raises(Radius::UndefinedTagError) { @parser.parse "<r:user_without_attributes:name />" }
   end
   
-  def xtest_tag_options_must_contain_a_for_option_if_methods_are_exposed
+  def test_tag_options_must_contain_a_for_option_if_methods_are_exposed
     e = assert_raises(ArgumentError) { define_tag('fun', :expose => :today) { 'test' } }
     assert_equal "tag definition must contain a :for option when used with the :expose option", e.message
-  end
-  
-  def xtest_tag_option_type_is_enumerable
-    define_tag 'items', :for => [4, 2, 8, 5], :type => :enumerable
-    assert_parse_output '4', '<r:items:size />'
-    assert_parse_output '4', '<r:items:count />'
-    assert_parse_output '4', '<r:items:length />'
-    assert_parse_output '8', '<r:items:max />'
-    assert_parse_output '2', '<r:items:min />'
-    assert_parse_output '(4)(2)(8)(5)', '<r:items:each>(<r:item />)</r:items:each>'
-  end
-  def xtest_tag_option_expose_and_type_is_enumerable
-    define_tag 'array', :for => [4, 2, 8, 5], :type => :enumerable, :item_tag => 'number', :expose => [:first, :last]
-    assert_parse_output '4', '<r:array:first />'
-    assert_parse_output '5', '<r:array:last />'
-    assert_parse_output '(4)(2)(8)(5)', '<r:array:each>(<r:number />)</r:array:each>'
-  end
-  def xtest_tag_option_type_is_enumerable_with_complex_objects
-    define_tag 'users', :for => users, :type => :enumerable, :item_tag => :user, :expose_as_items => :first,  :item_expose => [:name, :age]
-    assert_parse_output "* John (25)\n* James (27)\n", "<r:users:each>* <r:user:name /> (<r:user:age />)\n</r:users:each>"
-    assert_parse_output "John", "<r:users:max:name />"
-    assert_parse_output "27", "<r:users:min><r:age /></r:users:min>"
-    assert_parse_output "John", "<r:users:first:name />"
-  end
-  def xtest_tag_option_type_is_enumerable_with_no_objects
-    define_tag 'array', :for => [], :type => :enumerable
-    assert_parse_output '', '<r:array:max />'
-    assert_parse_output '', '<r:array:each>(<r:item />)</r:array:each>'
-    
-    define_tag 'users', :for => [], :type => :enumerable, :item_expose => [:name, :age]
-    assert_parse_output '', '<r:users:min:name />'
-  end
-  
-  def xtest_tag_option_type_is_collection
-    define_tag 'array', :for => [4, 2, 8, 5], :type => :collection
-    assert_parse_output '4', '<r:array:first />'
-    assert_parse_output '5', '<r:array:last />'
-    assert_parse_output '(4)(2)(8)(5)', '<r:array:each>(<r:item />)</r:array:each>'
-  end
-  def xtest_tag_option_type_is_collection_with_complex_objects
-    define_tag 'array', :for => users, :type => :collection, :item_expose => [:name, :age]
-    assert_parse_output 'John', '<r:array:first:name />'
-    assert_parse_output '27', '<r:array:last><r:age /></r:array:last>'
-  end
-  
-  def xtest_tag_option_type_is_undefined
-    e = assert_raises(ArgumentError) { define_tag 'test', :type => :undefined_type }
-    assert_equal "Undefined type `undefined_type' in options hash", e.message
   end
   
   def test_parse_fail_on_missing_end_tag

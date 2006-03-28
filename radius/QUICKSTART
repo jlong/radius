@@ -1,9 +1,11 @@
 = Radius Quick Start
 
+
+
 == Defining Tags
 
 Before you can parse a template with Radius you need to create a Context object which defines
-the tags that will be used in the template. This is pretty simple:
+the tags that will be used in the template. This is actually quite simple:
 
   require 'radius'
   
@@ -15,7 +17,7 @@ the tags that will be used in the template. This is pretty simple:
 
 Once you have defined a context you can easily create a Parser:
 
-  parser = Radius::Parser.new(MyContext.new)
+  parser = Radius::Parser.new(context)
   puts parser.parse('<p><radius:hello /></p>')
   puts parser.parse('<p><radius:hello name="John" /></p>')
 
@@ -26,11 +28,13 @@ This code will output:
 
 Note how you can pass attributes from the template to the context using the attributes hash.
 Above, the first tag that was parsed didn't have a name attribute so the code in the +hello+
-method uses "World" instead. The second time the tag is parsed the name attribute is set to
-"John" which is used to create the string "Hello John!". Tags that do not follow this rule
-will be treated as if they were undefined (like normal methods).
+tag definition uses "World" instead. The second time the tag is parsed the name attribute is
+set to "John" which is used to create the string "Hello John!". Tags that do not follow this
+rule will be treated as if they were undefined (like normal methods).
 
-== Container Tags and Nesting
+
+
+== Container Tags
 
 Radius also allows you to define "container" tags. That is, tags that contain content and
 that may optionally manipulate it in some way. For example, if you have RedCloth installed
@@ -56,6 +60,10 @@ This code will output:
 
   <h1>Hello <strong>World</strong>!</h1>
 
+
+
+== Nesting Tags
+
 But wait!--it gets better. Because container tags can manipulate the content they contain
 you can use them to iterate over collections:
 
@@ -63,13 +71,13 @@ you can use them to iterate over collections:
     c.define_tag "stooge" do |tag|
       content = ''
       ["Larry", "Moe", "Curly"].each do |name|
-        @name = name
+        tag.locals.name = name
         content << tag.expand
       end
       content
     end
     define_tag "stooge:name" do
-      @name
+      tag.locals.name
     end
   end
   
@@ -122,7 +130,7 @@ equivalent of writing:
 So far this doesn't save you a whole lot of typing, but suppose you want to expose certain
 methods that are on that object? You could do this:
 
-  c.define_tag "user", :for => user :expose => [ :name, :age, :email ]
+  c.define_tag "user", :for => user, :expose => [ :name, :age, :email ]
   
 This will add a total of four tags to the context. One for the <tt>user</tt> variable, and
 one for each of the three methods listed in the +expose+ clause. You could now get the user's
@@ -131,6 +139,8 @@ name inside your template like this:
   <radius:user><radius:name /></radius:user>
 
 If "John" was the value stored in <tt>@user.name</tt> the template would render as "John".
+
+
 
 == Tag Shorthand ==
 
@@ -145,64 +155,8 @@ to "scope" the reference to <tt>name</tt>:
   <radius:user:name />
 
 Radius allows you to use this shortcut with most tags.
-
-
-== Enumerable and Collection Tags
-
-Our three-stooges example a few sections above is a fairly complex way of exposing a simple array
-in your template. Radius 0.1.0 provides a simpler approach:
-
-  stooges = ['Larry', 'Moe', 'Curly']
-  c.define_tag "stooges", for => stooges :type => :enumerable
-
-This will create a +stooges+ tag that will map to to the +stooges+ array. You could then put the
-following code in your template:
-
-  <radius:stooges:each><radius:item /> </radius:stooges:each>
   
-And it would render like this:
 
-  Larry Moe Curly
-  
-Now, in real life you often need to deal with collections of objects, not just strings (which
-is the case in the above example). Suppose that the array in the above example was really a
-collection of +Stooge+ objects:
-
-  stooges = [
-    Stooge.new( "Larry", :curly    ),
-    Stooge.new( "Moe",   :straight ),
-    Stooge.new( "Curly", :none     )
-  ]
-
-(You initialize a +Stooge+ object with it's name and hair style.)
-
-We could have defined our stooges tag to give us access to the name and hair style each stooge:
-
-  define_tag "stooges", :for => stooges, :type => :enumerable, :item_expose => [:name, :hair]
-  
-If we had done this, we could now reference the array of +Stooge+ objects in our template
-like this:
-
-  <radius:stooges:each><radius:item:name /> (<radius:item:hair />) </radius:stooges:each>
-
-This would render:
-
-  Larry (curly) Moe (straight) Curly (none)
-  
-Notice how in the tag definition above we used the +item_expose+ option to automatically create
-child tags for the +name+ and +hair+ attributes on each +Stooge+ object. There is one more option
-that you can use which makes this easier. It's the +item_tag+ option. It's useful for changing
-the name of the +item+ tag:
-
-  define_tag "stooges", :type => :enumerable, :item_tag => "stooge", :item_exposes => [:name, :hair]
-
-You could then use this with the following template:
-
-  <radius:stooges:each><radius:stooge:name /> (<radius:stooge:hair />) </radius:stooges:each>
-
-And get the same result. Notice how that this time we can use <tt>stooge:name</tt> and
-<tt>stooge:hair</tt> instead of <tt>item:name</tt> and <tt>item:hair</tt>.
-  
 
 == Altering the Tag Prefix
 
@@ -211,7 +165,9 @@ tag_prefix attribute on a Parser. For example:
 
   parser = Radius::Parser.new(context, :tag_prefix => 'r')
 
-Now, when parsing templates with +parser+, Radius will require that every tag begin with "r".
+Now, when parsing templates with +parser+, Radius will require that every tag begin with "r"
+instead of "radius".
+
 
 
 == Using Context#tag_missing to Define Behavior for Missing Tags
@@ -234,4 +190,5 @@ This code will output:
 
 Normally, when the Radius Parser encounters an undefined tag for a Context it raises an
 UndefinedTagError, but since we have defined #tag_missing on LazyContext the Parser now
-outputs our custom message.
+outputs a nicely formated error message when we parse a string that does not contain a
+valid tag.

@@ -38,14 +38,15 @@ module Radius
         # Adds the tag definition to the context. Override in subclasses to add additional tags
         # (child tags) when the tag is created.
         def construct_tag_set(name, options, &block)
-          @context.set_item_for(name, options[:for]) if options[:for]
           if block
             @context.definitions[name.to_s] = block
           else
+            lp = last_part(name)
             @context.define_tag(name) do |tag|
               if tag.single?
-                tag.item
+                options[:for]
               else
+                tag.locals.send("#{ lp }=", options[:for]) unless options[:for].nil?
                 tag.expand
               end
             end
@@ -76,8 +77,9 @@ module Radius
         def expose_methods_as_tags(name, options)
           options[:expose].each do |method|
             tag_name = "#{name}:#{method}"
+            lp = last_part(name)
             @context.define_tag(tag_name) do |tag|
-              object = tag.item_for(name)
+              object = tag.locals.send(lp)
               object.send(method)
             end
           end
@@ -88,86 +90,14 @@ module Radius
         def expand_array_option(value)
           [*value].compact.map { |m| m.to_s.intern }
         end
-    end
-    
-    class EnumerableTagFactory < TagFactory # :nodoc:
-      protected
-        def construct_tag_set(name, options, &block) 
-          super
-          
-          @context.define_tag "#{name}:size" do |tag|
-            object = tag.item_for(name)
-            object.entries.size
-          end
-      
-          @context.define_tag "#{name}:count" do |tag|
-            tag.context.render_tag "#{name}:size"
-          end
-      
-          @context.define_tag "#{name}:length" do |tag|
-            tag.context.render_tag "#{name}:size"
-          end
-      
-          item_tag_name = "#{name}:each:#{options[:item_tag]}"
-      
-          @context.define_tag "#{name}:each" do |tag|
-            object = tag.item_for(name)
-            result = []
-            object.each do |item|
-              tag.set_item_for(item_tag_name, item)
-              result << tag.expand
-            end 
-            result
-          end
-      
-          @context.define_tag(item_tag_name, :for => nil, :expose => options[:item_expose]) do |tag|
-            tag.item
-          end
-          
-          options[:expose_as_items] += ['min', 'max']
-          expose_items(name, options)
-        end
         
-        def prepare_options(name, options)
-          options = super
-          options[:item_tag] = (options.has_key?(:item_tag) ? options[:item_tag] : 'item').to_s
-          options[:item_expose] = expand_array_option(options[:item_expose])
-          options[:expose_as_items] = expand_array_option(options[:expose_as_items])
-          options
-        end
-        
-        def expose_items(name, options)
-          options[:expose_as_items].each do |exposer|
-            @context.define_tag "#{name}:#{exposer}" do |tag|
-              object = tag.item_for(name)
-              tag.item = object.send(exposer)
-              if tag.single?
-                tag.item
-              else
-                tag.expand
-              end
-            end
-          
-            options[:item_expose].each do |method|
-              @context.define_tag "#{name}:#{exposer}:#{method}" do |tag|
-                object = tag.item_for("#{name}:#{exposer}") || tag.item_for(name).send(exposer)
-                object.send(method) if object
-              end
-            end
-          end
-        end
-    end
-    
-    class CollectionTagFactory < EnumerableTagFactory # :nodoc:
-      protected
-        def construct_tag_set(name, options, &block)
-          options[:expose_as_items] += [:first, :last]
-          super
+        def last_part(name)
+          name.split(':').last
         end
     end
   end
-  
-  class TagLocals
+    
+  class DelegatingStruct # :nodoc:
     attr_accessor :object
     
     def initialize(object = nil)
@@ -241,26 +171,6 @@ module Radius
       not single?
     end
     
-    # Returns the item associated with the current tag.
-    def item
-      item_for(@name)
-    end
-    
-    # Associates an item with the current tag.
-    def item=(value)
-      set_item_for(@name, value)
-    end
-    
-    # Gets the item associated with another tag.
-    def item_for(tag_name)
-      @context.item_for_tag(tag_name)
-    end
-    
-    # Sets the item associated with another tag.
-    def set_item_for(tag_name, value)
-      @context.set_item_for(tag_name, value)
-    end
-    
     # Returns a list of the way tags are nested around the current tag as a string.
     def nesting
       @context.current_nesting
@@ -283,12 +193,13 @@ module Radius
   class Context
     # A hash of tag definition blocks that define tags accessible on a Context.
     attr_accessor :definitions # :nodoc:
+    attr_accessor :globals # :nodoc:
     
     # Creates a new Context object.
     def initialize(&block)
       @definitions = {}
       @tag_binding_stack = []
-      @items_for_tags = {}
+      @globals = DelegatingStruct.new
       with(&block) if block_given?
     end
     
@@ -320,22 +231,6 @@ module Radius
     #                     automatically. Useful for ActiveRecord objects. Boolean. Defaults
     #                     to +true+.
     #
-    # +expose_as_items+:: Specifies a list of items (strings or symbols) which refer to
-    #                     methods that return items (only applical when the type option
-    #                     is set to 'enumerable' or 'collection').
-    #
-    # +item_tag+::        Specifies the name of the item tag (only applicable when the type
-    #                     option is set to 'enumerable' or 'collection').
-    #
-    # +item_expose+::     Works like +expose+ except that it exposes methods on items
-    #                     referenced by tags with a type of 'enumerable' or 'collection'.
-    #
-    # +type+::            When this option is set to 'enumerable' the following additional
-    #                     tags are added as child tags: +each+, <tt>each:item</tt>, +max+, 
-    #                     +min+, +size+, +length+, and +count+. When set to 'collection'
-    #                     all of the 'enumerable' child tags are added along with +first+
-    #                     and +last+. Value may be specified as a string or symbol.
-    #
     def define_tag(name, options = {}, &block)
       type = Util.impartial_hash_delete(options, :type).to_s
       klass = Util.constantize('Radius::TagDefinitions::' + Util.camelize(type) + 'TagFactory') rescue raise(ArgumentError.new("Undefined type `#{type}' in options hash"))
@@ -365,20 +260,6 @@ module Radius
       raise UndefinedTagError.new(name)
     end
 
-    # Each tag is allowed to associate a single variable with itself.
-    # This method returns the item associated with a tag.
-    def item_for_tag(name)
-      n = qualified_tag_name(name)
-      @items_for_tags[n]
-    end
-    
-    # Each tag is allowed to associate a single variable with itself.
-    # This method sets that variable.
-    def set_item_for(name, value)
-      n = qualified_tag_name(name)
-      @items_for_tags[n] = value
-    end
-
     # Returns the state of the current render stack. Useful from inside
     # a tag definition. Normally just use TagBinding#nesting.
     def current_nesting
@@ -391,8 +272,8 @@ module Radius
       # tag binding stack.
       def stack(name, attributes, block)
         previous = @tag_binding_stack.last
-        previous_locals = previous.nil? ? nil : previous.locals
-        locals = TagLocals.new(previous_locals)
+        previous_locals = previous.nil? ? @globals : previous.locals
+        locals = DelegatingStruct.new(previous_locals)
         binding = TagBinding.new(self, locals, name, attributes, block)
         @tag_binding_stack.push(binding)
         result = yield(binding)
@@ -421,7 +302,8 @@ module Radius
         end
       end
       
-      # Returns the specificity for +tag_name+ at nesting defined by +nesting_parts+ as a number.
+      # Returns the specificity for +tag_name+ at nesting defined
+      # by +nesting_parts+ as a number.
       def numeric_specificity(tag_name, nesting_parts)
         nesting_parts = nesting_parts.dup
         name_parts = tag_name.split(':')
@@ -488,7 +370,7 @@ module Radius
       @tag_prefix = options[:tag_prefix]
     end
 
-    # Parse string for tags, expand them, and return the result.
+    # Parses string for tags, expands them, and returns the result.
     def parse(string)
       @stack = [ParseContainerTag.new { |t| t.contents.to_s }]
       pre_parse(string)
