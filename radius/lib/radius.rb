@@ -97,7 +97,7 @@ module Radius
     end
   end
     
-  class DelegatingStruct # :nodoc:
+  class DelegatingOpenStruct # :nodoc:
     attr_accessor :object
     
     def initialize(object = nil)
@@ -137,7 +137,7 @@ module Radius
     # this object directly.
     attr_reader :context
     
-    # The TagLocals object for the current tag.
+    # The locals object for the current tag.
     attr_reader :locals
     
     # The name of the tag (as used in a template string).
@@ -171,12 +171,17 @@ module Radius
       not single?
     end
     
+    # The globals object from which all locals objects ultimately inherit their values.
+    def globals
+      @context.globals
+    end
+    
     # Returns a list of the way tags are nested around the current tag as a string.
     def nesting
       @context.current_nesting
     end
     
-    # Fires off Context#tag_missing for the curren tag.
+    # Fires off Context#tag_missing for the current tag.
     def missing!
       @context.tag_missing(name, attributes, &block)
     end
@@ -199,7 +204,7 @@ module Radius
     def initialize(&block)
       @definitions = {}
       @tag_binding_stack = []
-      @globals = DelegatingStruct.new
+      @globals = DelegatingOpenStruct.new
       with(&block) if block_given?
     end
     
@@ -273,7 +278,7 @@ module Radius
       def stack(name, attributes, block)
         previous = @tag_binding_stack.last
         previous_locals = previous.nil? ? @globals : previous.locals
-        locals = DelegatingStruct.new(previous_locals)
+        locals = DelegatingOpenStruct.new(previous_locals)
         binding = TagBinding.new(self, locals, name, attributes, block)
         @tag_binding_stack.push(binding)
         result = yield(binding)

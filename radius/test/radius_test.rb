@@ -214,6 +214,17 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output 'outer', "<r:outer:var />"
   end
   
+  def test_tag_globals
+    define_tag "set" do |tag|
+      tag.globals.var = tag.attr['value']
+      ''
+    end
+    define_tag "var" do |tag|
+      tag.globals.var
+    end
+    assert_parse_output "  true  false", %{<r:var /> <r:set value="true" /> <r:var /> <r:set value="false" /> <r:var />}
+  end
+  
   def test_parse_loops
     @item = nil
     define_tag "each" do |tag|
