@@ -1,3 +1,23 @@
+#--
+# Copyright (c) 2006, John W. Long
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this
+# software and associated documentation files (the "Software"), to deal in the Software
+# without restriction, including without limitation the rights to use, copy, modify,
+# merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+# permit persons to whom the Software is furnished to do so, subject to the following
+# conditions:
+#
+# The above copyright notice and this permission notice shall be included in all copies
+# or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
+# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
+# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+# CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+#++
 module Radius
   # Abstract base class for all parsing errors.
   class ParseError < StandardError
@@ -14,7 +34,7 @@ module Radius
   
   # Occurs when Context#render_tag cannot find the specified tag on a Context.
   class UndefinedTagError < ParseError
-    # Create a new MissingEndTagError object for +tag_name+. 
+    # Create a new UndefinedTagError object for +tag_name+. 
     def initialize(tag_name)
       super("undefined tag `#{tag_name}'")
     end
@@ -166,7 +186,7 @@ module Radius
       block.nil?
     end
 
-    # Returns true if the current tag is a double tag.
+    # Returns true if the current tag is a container tag.
     def double?
       not single?
     end
@@ -186,7 +206,7 @@ module Radius
       @context.tag_missing(name, attributes, &block)
     end
     
-    # Using the context render the tag.
+    # Renders the tag using the current context .
     def render(tag, attributes = {}, &block)
       @context.render_tag(tag, attributes, &block)
     end
@@ -194,6 +214,8 @@ module Radius
   
   #
   # A context contains the tag definitions which are available for use in a template.
+  # See the QUICKSTART[link:files/QUICKSTART.html] for a detailed explaination its
+  # usage.
   #
   class Context
     # A hash of tag definition blocks that define tags accessible on a Context.
@@ -294,8 +316,7 @@ module Radius
         specific_name = nesting_parts.join(':') # specific_name always has the highest specificity
         unless @definitions.has_key? specific_name
           possible_matches = @definitions.keys.grep(/(^|:)#{name}$/)
-          specificity_pairs = possible_matches.collect { |tag| [numeric_specificity(tag, nesting_parts), tag] }
-          specificity = Hash[*specificity_pairs.flatten]
+          specificity = possible_matches.inject({}) { |hash, tag| hash[numeric_specificity(tag, nesting_parts)] = tag; hash }
           max = specificity.keys.max
           if max != 0
             specificity[max]
@@ -354,7 +375,8 @@ module Radius
 
   #
   # The Radius parser. Initialize a parser with a Context object that
-  # defines how tags should be expanded.
+  # defines how tags should be expanded. See the QUICKSTART[link:files/QUICKSTART.html]
+  # for a detailed explaination of its usage.
   #
   class Parser
     # The Context object used to expand template tags.

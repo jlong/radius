@@ -3,6 +3,8 @@ require 'rake/testtask'
 require 'rake/rdoctask'
 require 'rake/gempackagetask'
 
+PKG_VERSION = '0.5.0'
+
 task :default => :test
 
 Rake::TestTask.new do |t| 
@@ -10,7 +12,7 @@ Rake::TestTask.new do |t|
 end
 
 RDOC_TITLE = "Radius -- Powerful Tag-Based Templates"
-RDOC_EXTRAS = ["README", "QUICKSTART", "ROADMAP", "DSL-SPEC", "CHANGELOG"]
+RDOC_EXTRAS = ["README", "QUICKSTART", "ROADMAP", "CHANGELOG"]
 
 Rake::RDocTask.new do |rd|
   rd.title = 'Radius -- Powerful Tag-Based Templates'
@@ -23,7 +25,7 @@ end
 spec = Gem::Specification.new do |s|
   s.name = 'radius'
   s.rubyforge_project = 'radius'
-  s.version = '0.1.0'
+  s.version = PKG_VERSION
   s.summary = 'Powerful tag-based template system.'
   s.description = "Radius is a small, but powerful tag-based template language for Ruby\nsimilar to the ones used in MovableType and TextPattern. It has tags\nsimilar to HTML or XML, but can be used to generate any form of plain\ntext (not just HTML)."
   s.homepage = 'http://radius.rubyforge.org'
@@ -56,5 +58,27 @@ task :install_gem => [:package, :uninstall_gem] do
   chdir(dir) do
     latest = Dir['radius-*.gem'].last
     sh "gem install #{latest}"
+  end
+end
+
+# --- Ruby forge release manager by florian gross -------------------------------------------------
+#
+# task found in Tobias Luetke's library 'liquid'
+#
+RUBY_FORGE_PROJECT = 'radius'
+RUBY_FORGE_USER = 'jlong'
+
+RELEASE_NAME  = PKG_VERSION
+RUBY_FORGE_GROUPID = '1262'
+RUBY_FORGE_PACKAGEID = '1538'
+
+desc "Publish the release files to RubyForge."
+task :release => [:gem, :package] do
+  files = ["gem", "tgz", "zip"].map { |ext| "pkg/#{PKG_FILE_NAME}.#{ext}" }
+
+  system("rubyforge login --username #{RUBY_FORGE_USER}")
+  
+  files.each do |file|
+    system("rubyforge add_release #{RUBY_FORGE_GROUPID} #{RUBY_FORGE_PACKAGEID} \"#{RELEASE_NAME}\" #{file}")
   end
 end

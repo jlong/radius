@@ -1,9 +1,16 @@
 = Change Log
 
-* Many refactorings of the Context object and unit tests.
-* Created a DSL for defining tags (introducing a DSL means that the old way of defining tags is obsolete,
-  meaning that this version of Radius is incompatible with the last).
+=== 0.5.0
+* Created a DSL for tag definitions (introducing a DSL makes this version of Radiant incompatible with
+  the last). The DSL has the following features:
+  - full support for nested tags
+  - global and local tag variables
+  - Contexts can now be defined dynamically (instead of being subclassed)
+  - see the QUICKSTART for more info
+* Many refactorings of the library and unit tests.
+* Changed the license to the MIT-LICENSE.
 * Updated documentation to reflect the changes.
+* Updated the version number to reflect the maturity of the code base.
 
 === 0.0.2
 * Refactored Parser to use Context#render_tag instead of #send when rendering tags defined on a Context.
