@@ -1,56 +1,6 @@
 =DSL Specification
 
-I haven't implemented a domain specific languages for Contexts yet, but I am hoping to
-do so in a future release. Below are some thoughts (in code) for how I would like it to
-work. Note that with a robust DSL you will be able to define that certain tags are
-only valid within certain containing tags.
-
-  class StoreContext < Radius::Context
-    def initialize(options)
-      @prefix = "r" # all tags must be prefixed with "r"
-      @user = options[:user]
-      @cart = options[:cart]
-      @session = options[:session]
-    end
-  
-    # expose the @user object variable
-    container(:user, :exposes => :user) do
-      # Use protect() on an object that has been exposed to prevent access to
-      # an attribute in a template. Conversely you could use the expose() method
-      # to expose specific attributes to the template and protect all others.
-      protect :password
-    
-      # add a single tag that returns the session_id
-      tag :session_id do |attributes|
-        @session.id
-      end
-    end
-  
-    # expose the @cart object as the basket tag
-    container(:basket, :exposes => :cart) do
-      expand do |attributes|
-        #
-        # some initialization code with attributes before handling
-        # content block
-        #
-        yeild
-      end
-    
-      container(:items, :exposes => :item) do
-        expand do |attributes|
-          @cart.items.each do |@item|
-            yield
-          end
-        end
-      end
-    end
-  
-    container :cart do
-      expand do |attributes|
-        yield
-      end
-    end
-  end
+This is almost completely implemented:
 
   class User
     attr_accessor :name, :login, :password, :email
@@ -74,13 +24,15 @@ only valid within certain containing tags.
     end
   
     def total
-      @items.map { |line_item| line_item.total }
+      @items.inject(0) do |total, line_item|
+        total += line_item.total
+      end 
     end
   end
 
   class LineItem
     attr_accessor :name, :description, :quantity, :item_price
-    def intialize(name, description, price, quantity)
+    def initialize(name, description, price, quantity)
       @name, @description, @price, @quantity = name, description, price, quantity
     end
     def full_price
@@ -90,7 +42,7 @@ only valid within certain containing tags.
 
   receipt = <<-RECEIPT
   <p><r:user:name />, thank you for shopping with us! An order summary
-    is printed below for your convinience. Please print a copy for your records.</p>
+    is printed below for your convenience. Please print a copy for your records.</p>
   <r:cart>
     <table>
       <thead>
@@ -102,17 +54,17 @@ only valid within certain containing tags.
         </tr>
       </thead>
       <tbody>
-        <r:items>
+        <r:items:each>
           <tr>
             <td>
-              <strong><r:name /></strong><br >
-              <r:description />
+              <strong><r:item:name /></strong><br >
+              <r:item:description />
             </td>
-            <td><r:price /></td>
-            <td><r:quanity /></td>
-            <td><r:full_price /></td>
+            <td><r:item:price /></td>
+            <td><r:item:quantity /></td>
+            <td><r:item:full_price /></td>
           </tr>
-        </r:items>
+        </r:items:each>
       </tbody>
       <tr>
         <td colspan="3">Total</td>
@@ -129,23 +81,89 @@ only valid within certain containing tags.
   )
   session = Session.new('a4bd386e512bacd581')
 
-  context = StoreContext.new(
-    :user => user,
-    :cart => cart,
-    :session => session
-  )
+  context = Radius::Context.define do |r|
+    r.tag "user", :for => user :expose => [:name, :login, :email]
+    r.tag "user:session", :for => session, :expose => :id
+    r.tag "user:password" do
+      "*" * user.password.size
+    end
+    r.tag "basket", :for => cart, :expose => :total
+    r.tag "basket:items", :for => proc { cart.items }, :type => :enumerable, :item_expose => [:name, :description, :quantity, :price]
+  end
 
-  template = Radius::Template.new(
-    :text => receipt,
-    :context => context
-  )
-
-  template.compile! # based on context parses text into abstract syntax tree
-  puts template.expand # outputs expanded template
-
-  # alternate usage
   parser = Radius::Parser.new(context)
   puts parser.parse(receipt) # compiles and outputs expanded template
 
-  # another alternate
+  # another alternative
   puts Radius.parse(receipt, context)
+  
+  
+  # Some scratch code from Radiant CMS:
+  
+  page = Page.new
+  
+  context = Radius::Context.new do |c|
+    c.define_tag "page", :for => page
+    c.define_tag "page:children", :for => page.children, :item_tag => 'child', :type => :collection
+    c.define_tag "link" do |tag|
+      if (tag.nesting ~= /children/) or (tag.name ~= /^page:link$/ )
+        %{<a href=#{ tag.item_for('child').url }">} + tag.expand + %{</a>}
+      else
+        %{<a href=#{ page.url }">} + tag.expand + %{</a>}
+      end
+    end
+  end
+  
+  
+  <r:page>
+    <r:title /> => "Page Title"
+    <r:find url="/en/news/">
+      <r:title /> => "News Archives"
+      <r:page:title /> => "Page Title"
+      <r:children:each> => News archives children
+
+      </r:children:each>
+    <r:find>
+  </r:page>
+
+  <r:page:find_all match="/en/news/*/">
+    <r:page:title />
+  </r:page:find>
+
+  define_tag "page" do |tag|
+    tag.local.page = @page
+    tag.expand
+  end
+
+  define_tag "page:find" do |tag|
+    tag.local.page = result_of_find
+    tag.expand
+  end
+  
+  define_tag "page:children" do |tag|
+    tag.local.children = tag.local.page.children
+    tag.expand
+  end
+  
+  define_tag "page:children:each" do |tag|
+    children = tag.local.children
+    result = ''
+    children.each do |child|
+      tag.local.page = child
+      result << tag.expand
+    end
+    result
+  end
+
+  define_tag "page:title" do |tag|
+    page = tag.local.page
+    page.title
+  end
+
+  The short hand form of a tag:
+
+  <r:page:title />
+
+  Should be the equivalent of saying:
+
+  <r:page><r:title /></r:page>
