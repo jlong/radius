@@ -8,7 +8,9 @@ module RadiusTestHelper
     Radius::Context.new do |c|
       c.define_tag("reverse"   ) { |tag| tag.expand.reverse }
       c.define_tag("capitalize") { |tag| tag.expand.upcase  }
-      c.define_tag("attr")       { |tag| tag.attr.inspect }
+      c.define_tag("attr"      ) { |tag| tag.attr.inspect   }
+      c.define_tag("echo"      ) { |tag| tag.attr['value']  }
+      c.define_tag("wrap"      ) { |tag| "[#{tag.expand}]"  }
     end
   end
   
@@ -130,10 +132,18 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output angle, %{<r:attr angle=">"></r:attr>}
   end
   
+  def test_parse_quotes
+    assert_parse_output "test []", %{<r:echo value="test" /> <r:wrap attr="test"></r:wrap>}
+  end
+  
   def test_things_that_should_be_left_alone
-    # The parser currently fails on these assertions
-    #assert_parsed_either_way_is_unchanged %{ test="2"="4" }
-    #assert_parsed_either_way_is_unchanged %{="2" }
+    [
+      %{ test="2"="4" },
+      %{="2" } 
+    ].each do |middle|
+      assert_parsed_is_unchanged "<r:attr#{middle}/>"
+      assert_parsed_is_unchanged "<r:attr#{middle}>"
+    end
   end
     
   def test_parse_result_is_always_a_string
@@ -167,13 +177,10 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output "extra * parent * child * nesting", "<r:extra:parent><r:child:nesting /></r:extra:parent>"
     assert_raises(Radius::UndefinedTagError) { @parser.parse("<r:child />") }
   end
-  
   def test_parse_tag_nesting_2
     define_tag("parent", :for => '')
     define_tag("parent:child", :for => '')
-    define_tag "content" do |tag|
-      tag.nesting
-    end
+    define_tag("content") { |tag| tag.nesting }
     assert_parse_output 'parent:child:content', '<r:parent><r:child:content /></r:parent>'
   end
   
@@ -282,11 +289,6 @@ class RadiusParserTest < Test::Unit::TestCase
     
     def assert_parsed_is_unchanged(something)
       assert_parse_output something, something
-    end
-    
-    def assert_parsed_either_way_is_unchanged(middle)
-      assert_parsed_is_unchanged %{<r:attr#{middle}/>}
-      assert_parsed_is_unchanged %{<r:attr#{middle}></r:attr>}
     end
     
     class User
