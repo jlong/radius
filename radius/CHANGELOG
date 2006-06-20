@@ -1,5 +1,6 @@
 = Change Log
 
+=== 0.5.1
 * Fixed a problem with parsing quotes where a single tag preceding a double tag would consume the start
   tag of the double tag if both contained attributes.
 
