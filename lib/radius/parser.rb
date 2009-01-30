@@ -26,68 +26,49 @@ module Radius
     # Parses string for tags, expands them, and returns the result.
     def parse(string)
       @stack = [ParseContainerTag.new { |t| t.contents.to_s }]
-      pre_parse(string)
+      tokenize(string)
+      stack_up
       @stack.last.to_s
     end
 
     protected
-
-      def pre_parse(text) # :nodoc:
-        re = %r{<#{@tag_prefix}:([\w:]+?)(\s+(?:\w+\s*=\s*(?:"[^"]*?"|'[^']*?')\s*)*|)>|</#{@tag_prefix}:([\w:]+?)\s*>}
-        if md = re.match(text)
-          start_tag, attr, end_tag = $1, $2, $3
-          @stack.last.contents << ParseTag.new { parse_individual(md.pre_match) }
-          remaining = md.post_match
-          if start_tag
-            parse_start_tag(start_tag, attr, remaining)
-          else
-            parse_end_tag(end_tag, remaining)
-          end
+    # Convert the string into a list of text blocks and scanners (tokens)
+    def tokenize(string)
+      @tokens = []
+      remainder = string
+      until remainder.empty?
+        s = Scanner.new remainder
+        s.parse
+        @tokens << s.prematch
+        if s.flavor == :tasteless
+          remainder = s.content + s.leftover
         else
-          if @stack.length == 1
-            @stack.last.contents << ParseTag.new { parse_individual(text) }
-          else
-            raise MissingEndTagError.new(@stack.last.name)
-          end
+          @tokens << s
+          remainder = s.leftover
         end
       end
-
-      def parse_start_tag(start_tag, attr, remaining) # :nodoc:
-        @stack.push(ParseContainerTag.new(start_tag, parse_attributes(attr)))
-        pre_parse(remaining)
-      end
-
-      def parse_end_tag(end_tag, remaining) # :nodoc:
-        popped = @stack.pop
-        if popped.name == end_tag
-          popped.on_parse { |t| @context.render_tag(popped.name, popped.attributes) { t.contents.to_s } }
-          tag = @stack.last
-          tag.contents << popped
-          pre_parse(remaining)
-        else
-          raise MissingEndTagError.new(popped.name)
+    end
+    
+    def stack_up
+      @tokens.each do |t|
+        if t.is_a? String
+          @stack.last.contents << t
+          next
+        end
+        case t.flavor
+        when :open
+          @stack.push(ParseContainerTag.new(t.starttag, t.attrs))
+        when :self
+          replace = @context.render_tag(t.starttag, t.attrs)
+          @stack.last.contents << replace
+        when :close
+          popped = @stack.pop
+          raise MissingEndTagError.new(popped.name, @stack) if popped.name != t.starttag
+          popped.on_parse { |b| @context.render_tag(popped.name, popped.attributes) { b.contents.to_s } }
+          @stack.last.contents << popped
         end
       end
-
-      def parse_individual(text) # :nodoc:
-        re = %r{<#{@tag_prefix}:([\w:]+?)(\s+(?:\w+\s*=\s*(?:"[^"]*?"|'[^']*?')\s*)*|)/>}
-        if md = re.match(text)
-          attr = parse_attributes($2)
-          replace = @context.render_tag($1, attr)
-          md.pre_match + replace + parse_individual(md.post_match)
-        else
-          text || ''
-        end
-      end
-
-      def parse_attributes(text) # :nodoc:
-        attr = {}
-        re = /(\w+?)\s*=\s*('|")(.*?)\2/
-        while md = re.match(text)
-          attr[$1] = $3
-          text = md.post_match
-        end
-        attr
-      end
+      raise MissingEndTagError.new(@stack.last.name, @stack) if @stack.length != 1
+    end
   end
 end

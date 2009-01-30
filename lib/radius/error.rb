@@ -7,8 +7,9 @@ module Radius
   # tags are miss-matched in a template.
   class MissingEndTagError < ParseError
     # Create a new MissingEndTagError object for +tag_name+. 
-    def initialize(tag_name)
-      super("end tag not found for start tag `#{tag_name}'")
+    def initialize(tag_name, stack)
+      stack_message = " with stack #{stack.inspect}" if stack
+      super("end tag not found for start tag `#{tag_name}'#{stack_message}")
     end
   end
   

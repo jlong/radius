@@ -18,11 +18,33 @@ RDOC_EXTRAS = ["README", "QUICKSTART", "ROADMAP", "CHANGELOG"]
 
 task :default => :test
 
+desc 'pdf of the ragel parser'
+file 'doc/pre_parse.pdf' => 'lib/radius/parser/pre_parse.dot' do |t|
+  cd 'lib/radius/parser' do
+    sh "dot -Tpdf -o ../../../doc/pre_parse.pdf pre_parse.dot"
+  end
+end
+
+file 'lib/radius/parser/pre_parse.dot' => ['lib/radius/parser/pre_parse.rl'] do |t|
+  cd 'lib/radius/parser' do
+    sh "ragel -Vp pre_parse.rl > pre_parse.dot"
+  end
+end
+
+desc 'turn the pre_parse.rl file into a ruby file'
+file 'lib/radius/parser/pre_parse.rb' => ['lib/radius/parser/pre_parse.rl'] do |t|
+  cd 'lib/radius/parser' do
+    sh "ragel -R pre_parse.rl"
+  end
+end
+
+task :doc => [:rdoc, 'doc/pre_parse.pdf']
+
 Rake::TestTask.new do |t| 
   t.pattern = 'test/**/*_test.rb'
 end
 
-Rake::RDocTask.new do |rd|
+Rake::RDocTask.new :rdoc do |rd|
   rd.title = 'Radius -- Powerful Tag-Based Templates'
   rd.main = "README"
   rd.rdoc_files.include("lib/**/*.rb")

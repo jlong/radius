@@ -24,6 +24,7 @@ require 'radius/dostruct'
 require 'radius/tagbinding'
 require 'radius/context'
 require 'radius/parsetag'
+require 'radius/parser/pre_parse'
 require 'radius/parser'
 require 'radius/util'
 
