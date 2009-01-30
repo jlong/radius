@@ -1,5 +1,6 @@
 require 'test/unit'
 require 'radius'
+require 'timeout'
 
 module RadiusTestHelper
   class TestContext < Radius::Context; end
@@ -252,6 +253,23 @@ class RadiusParserTest < Test::Unit::TestCase
       tag.locals.item
     end
     assert_parse_output %{Three Stooges: "Larry", "Moe", "Curly"}, %{Three Stooges: <r:each between=", ">"<r:item />"</r:each>}
+  end
+  
+  def test_parse_speed
+    define_tag "set" do |tag|
+      tag.globals.var = tag.attr['value']
+      ''
+    end
+    define_tag "var" do |tag|
+      tag.globals.var
+    end
+    parts = %w{decima nobis augue at facer processus commodo legentis odio lectorum dolore nulla esse lius qui nonummy ullamcorper erat ii notare}
+    multiplier = parts.map{|p| "#{p}=\"#{rand}\""}.join(' ')
+    assert_nothing_raised do
+      Timeout.timeout(10) do
+        assert_parse_output " false", %{<r:set value="false" #{multiplier} /> <r:var />}
+      end
+    end
   end
   
   def test_tag_option_for
