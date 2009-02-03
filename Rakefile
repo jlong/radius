@@ -18,27 +18,27 @@ RDOC_EXTRAS = ["README", "QUICKSTART", "ROADMAP", "CHANGELOG"]
 
 task :default => :test
 
-desc 'pdf of the ragel parser'
-file 'doc/pre_parse.pdf' => 'lib/radius/parser/pre_parse.dot' do |t|
+desc 'pdf of the ragel scanner'
+file 'doc/scan.pdf' => 'lib/radius/parser/scan.dot' do |t|
   cd 'lib/radius/parser' do
-    sh "dot -Tpdf -o ../../../doc/pre_parse.pdf pre_parse.dot"
+    sh "dot -Tpdf -o ../../../doc/scan.pdf scan.dot"
   end
 end
 
-file 'lib/radius/parser/pre_parse.dot' => ['lib/radius/parser/pre_parse.rl'] do |t|
+file 'lib/radius/parser/scan.dot' => ['lib/radius/parser/scan.rl'] do |t|
   cd 'lib/radius/parser' do
-    sh "ragel -Vp pre_parse.rl > pre_parse.dot"
+    sh "ragel -Vp scan.rl > scan.dot"
   end
 end
 
-desc 'turn the pre_parse.rl file into a ruby file'
-file 'lib/radius/parser/pre_parse.rb' => ['lib/radius/parser/pre_parse.rl'] do |t|
+desc 'turn the scan.rl file into a ruby file'
+file 'lib/radius/parser/scan.rb' => ['lib/radius/parser/scan.rl'] do |t|
   cd 'lib/radius/parser' do
-    sh "ragel -R pre_parse.rl"
+    sh "ragel -R scan.rl"
   end
 end
 
-task :doc => [:rdoc, 'doc/pre_parse.pdf']
+task :doc => [:rdoc, 'doc/scan.pdf']
 
 Rake::TestTask.new do |t| 
   t.pattern = 'test/**/*_test.rb'

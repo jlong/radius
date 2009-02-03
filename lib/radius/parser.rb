@@ -34,19 +34,7 @@ module Radius
     protected
     # Convert the string into a list of text blocks and scanners (tokens)
     def tokenize(string)
-      @tokens = []
-      remainder = string
-      until remainder.empty?
-        s = Scanner.new remainder
-        s.parse
-        @tokens << s.prematch
-        if s.flavor == :tasteless
-          remainder = s.content + s.leftover
-        else
-          @tokens << s
-          remainder = s.leftover
-        end
-      end
+      @tokens = Scanner::operate(tag_prefix, string)
     end
     
     def stack_up
@@ -55,17 +43,20 @@ module Radius
           @stack.last.contents << t
           next
         end
-        case t.flavor
+        case t[:flavor]
         when :open
-          @stack.push(ParseContainerTag.new(t.starttag, t.attrs))
+          @stack.push(ParseContainerTag.new(t[:name], t[:attrs]))
         when :self
-          replace = @context.render_tag(t.starttag, t.attrs)
-          @stack.last.contents << replace
+          @stack.last.contents << ParseTag.new {@context.render_tag(t[:name], t[:attrs])}
         when :close
           popped = @stack.pop
-          raise MissingEndTagError.new(popped.name, @stack) if popped.name != t.starttag
+          raise WrongEndTagError.new(popped.name, t[:name], @stack) if popped.name != t[:name]
           popped.on_parse { |b| @context.render_tag(popped.name, popped.attributes) { b.contents.to_s } }
           @stack.last.contents << popped
+        when :tasteless
+          raise TastelessTagError.new(t, @stack)
+        else
+          raise UndefinedFlavorError.new(t, @stack)
         end
       end
       raise MissingEndTagError.new(@stack.last.name, @stack) if @stack.length != 1
