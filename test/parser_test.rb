@@ -226,7 +226,10 @@ class RadiusParserTest < Test::Unit::TestCase
   
   def test_parse_fail_on_missing_end_tag
     assert_raises(Radius::MissingEndTagError) { @parser.parse("<r:reverse>") }
-    assert_raises(Radius::MissingEndTagError) { @parser.parse("<r:reverse><r:capitalize></r:reverse>") }
+  end
+  
+  def test_parse_fail_on_wrong_end_tag
+    assert_raises(Radius::WrongEndTagError) { @parser.parse("<r:reverse><r:capitalize></r:reverse>") }
   end
   
   protected

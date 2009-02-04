@@ -7,7 +7,7 @@ module Radius
   class WrongEndTagError < ParseError
     def initialize(expected_tag, got_tag, stack)
       stack_message = " with stack #{stack.inspect}" if stack
-      super("wrong end tag `#{got_tag}' found for start tag `#{expected}'#{stack_message}")
+      super("wrong end tag `#{got_tag}' found for start tag `#{expected_tag}'#{stack_message}")
     end
   end
   
