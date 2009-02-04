@@ -1,33 +1,7 @@
-#--
-# Copyright (c) 2006, John W. Long
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy of this
-# software and associated documentation files (the "Software"), to deal in the Software
-# without restriction, including without limitation the rights to use, copy, modify,
-# merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-# permit persons to whom the Software is furnished to do so, subject to the following
-# conditions:
-#
-# The above copyright notice and this permission notice shall be included in all copies
-# or substantial portions of the Software.
-# 
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-# INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A
-# PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
-# HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
-# CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
-# OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-#++
-require 'radius/error'
-require 'radius/tagdefs'
-require 'radius/dostruct'
-require 'radius/tagbinding'
-require 'radius/context'
-require 'radius/parsetag'
-require 'radius/parser/scan'
-require 'radius/parser'
-require 'radius/util'
+dir = File.join(File.dirname(__FILE__), 'radius')
+require_files = %w{error tagdefs dostruct tagbinding context parsetag parser/scan parser util}
+require_files.each {|f| require File.join(dir, f)}
 
 module Radius
-  VERSION = '0.5.2'
+  VERSION = '0.6.0'
 end
