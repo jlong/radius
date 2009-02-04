@@ -66,6 +66,11 @@ class RadiusParserTest < Test::Unit::TestCase
       assert_parsed_is_unchanged "<r:attr#{middle}>"
     end
   end
+  
+  def test_tags_inside_html_tags
+    assert_parse_output %{<div class="xzibit">tags in yo tags</div>},
+      %{<div class="<r:reverse>tibizx</r:reverse>">tags in yo tags</div>}
+  end
     
   def test_parse_result_is_always_a_string
     define_tag("twelve") { 12 }
