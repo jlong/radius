@@ -1,6 +1,5 @@
-require 'test/unit'
-require 'radius'
 require 'timeout'
+require File.dirname(__FILE__) + '/../lib/radius'
 
 module RadiusTestHelper
   class TestContext < Radius::Context; end
