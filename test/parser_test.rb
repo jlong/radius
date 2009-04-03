@@ -117,7 +117,12 @@ class RadiusParserTest < Test::Unit::TestCase
     e = assert_raises(Radius::UndefinedTagError) { @parser.parse("<r:test />") }
     assert_equal "undefined tag `test'", e.message
   end
-  
+
+  def test_parse_chirpy_bird
+    # :> chirp chirp
+    assert_parse_output "<:", "<:"
+  end
+
   def test_parse_tag__binding_render_tag
     define_tag('test') { |tag| "Hello #{tag.attr['name']}!" }
     define_tag('hello') { |tag| tag.render('test', tag.attr) }
