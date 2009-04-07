@@ -3,5 +3,5 @@ require_files = %w{error tagdefs dostruct tagbinding context parsetag parser/sca
 require_files.each {|f| require File.join(dir, f)}
 
 module Radius
-  VERSION = '0.6.0'
+  VERSION = '0.6.1'
 end
