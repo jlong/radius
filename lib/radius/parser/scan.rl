@@ -40,8 +40,8 @@
 	# words
 	PrefixChar = [\-A-Za-z0-9._?] ;
 	NameChar = [\-A-Za-z0-9._:?] ;
-	TagName = NameChar* >_starttag %starttag;
-	Prefix = PrefixChar* >_prefix %prefix;
+	TagName = NameChar+ >_starttag %starttag;
+	Prefix = PrefixChar+ >_prefix %prefix;
 	
 	Name = Prefix ":" TagName;
 	
