@@ -1,4 +1,4 @@
-%w[rubygems rake rake/clean fileutils newgem rubigen].each { |f| require f }
+%w[rubygems rake rake/clean fileutils newgem rubigen hoe].each { |f| require f }
 require File.dirname(__FILE__) + '/lib/radius'
 
 # Generate all the Rake tasks
@@ -18,7 +18,7 @@ $hoe = Hoe.new('radius', Radius::VERSION) do |p|
   p.extra_dev_deps = [
     ['newgem', ">= #{::Newgem::VERSION}"]
   ]
-  
+
   p.clean_globs |= %w[**/.DS_Store tmp *.log]
   path = (p.rubyforge_name == p.name) ? p.rubyforge_name : "\#{p.rubyforge_name}/\#{p.name}"
   p.remote_rdoc_dir = File.join(path.gsub(/^#{p.rubyforge_name}\/?/,''), 'rdoc')
