@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/lib/radius'
 
 # Generate all the Rake tasks
 # Run 'rake -T' to see list of generated tasks (from gem root directory)
-$hoe = Hoe.new('radius', Radius::VERSION) do |p|
+$hoe = Hoe.spec 'radius' do |p|
   p.developer('John W. Long', 'me@johnwlong.com')
   p.author = [
     "John W. Long (me@johnwlong.com)",
@@ -18,6 +18,8 @@ $hoe = Hoe.new('radius', Radius::VERSION) do |p|
   p.extra_dev_deps = [
     ['newgem', ">= #{::Newgem::VERSION}"]
   ]
+
+  p.readme_file = 'README.rdoc'
 
   p.clean_globs |= %w[**/.DS_Store tmp *.log]
   path = (p.rubyforge_name == p.name) ? p.rubyforge_name : "\#{p.rubyforge_name}/\#{p.name}"
