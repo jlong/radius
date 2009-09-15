@@ -20,7 +20,7 @@ module Radius
       end
       options = Utility.symbolize_keys(options)
       @context = context
-      @tag_prefix = options[:tag_prefix]
+      @tag_prefix = options[:tag_prefix] || 'radius'
     end
 
     # Parses string for tags, expands them, and returns the result.
