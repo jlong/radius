@@ -1,7 +1,10 @@
-dir = File.join(File.dirname(__FILE__), 'radius')
-require_files = %w{error tagdefs dostruct tagbinding context parsetag parser/scan parser util}
-require_files.each {|f| require File.join(dir, f)}
-
-module Radius
-  VERSION = '0.6.1'
-end
+require 'radius/version'
+require 'radius/error'
+require 'radius/tag_definitions'
+require 'radius/delegating_open_struct'
+require 'radius/tag_binding'
+require 'radius/context'
+require 'radius/parse_tag'
+require 'radius/parser/scan'
+require 'radius/parser'
+require 'radius/utility'

@@ -4,16 +4,16 @@ module Radius
       def initialize(context)
         @context = context
       end
-    
+      
       def define_tag(name, options, &block)
         options = prepare_options(name, options)
         validate_params(name, options, &block)
         construct_tag_set(name, options, &block)
         expose_methods_as_tags(name, options)
       end
-    
+      
       protected
-
+      
         # Adds the tag definition to the context. Override in subclasses to add additional tags
         # (child tags) when the tag is created.
         def construct_tag_set(name, options, &block)
@@ -31,18 +31,18 @@ module Radius
             end
           end
         end
-
+        
         # Normalizes options pased to tag definition. Override in decendants to preform
         # additional normalization.
         def prepare_options(name, options)
-          options = Util.symbolize_keys(options)
+          options = Utility.symbolize_keys(options)
           options[:expose] = expand_array_option(options[:expose])
           object = options[:for]
           options[:attributes] = object.respond_to?(:attributes) unless options.has_key? :attributes
           options[:expose] += object.attributes.keys if options[:attributes]
           options
         end
-      
+        
         # Validates parameters passed to tag definition. Override in decendants to add custom
         # validations.
         def validate_params(name, options, &block)
@@ -51,7 +51,7 @@ module Radius
             raise ArgumentError.new("tag definition must contain a :for option when used with the :expose option") unless options[:expose].empty?
           end
         end
-      
+        
         # Exposes the methods of an object as child tags.
         def expose_methods_as_tags(name, options)
           options[:expose].each do |method|
@@ -65,11 +65,11 @@ module Radius
         end
       
       protected
-    
+        
         def expand_array_option(value)
           [*value].compact.map { |m| m.to_s.intern }
         end
-      
+        
         def last_part(name)
           name.split(':').last
         end

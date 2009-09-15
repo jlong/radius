@@ -1,7 +1,7 @@
 module Radius
   #
   # A context contains the tag definitions which are available for use in a template.
-  # See the QUICKSTART[link:files/QUICKSTART.html] for a detailed explaination its
+  # See the QUICKSTART for a detailed explaination its
   # usage.
   #
   class Context
@@ -46,8 +46,8 @@ module Radius
     #                     to +true+.
     #
     def define_tag(name, options = {}, &block)
-      type = Util.impartial_hash_delete(options, :type).to_s
-      klass = Util.constantize('Radius::TagDefinitions::' + Util.camelize(type) + 'TagFactory') rescue raise(ArgumentError.new("Undefined type `#{type}' in options hash"))
+      type = Utility.impartial_hash_delete(options, :type).to_s
+      klass = Utility.constantize('Radius::TagDefinitions::' + Utility.camelize(type) + 'TagFactory') rescue raise(ArgumentError.new("Undefined type `#{type}' in options hash"))
       klass.new(self).define_tag(name, options, &block)
     end
 
@@ -66,22 +66,22 @@ module Radius
         end
       end
     end
-
+    
     # Like method_missing for objects, but fired when a tag is undefined.
     # Override in your own Context to change what happens when a tag is
     # undefined. By default this method raises an UndefinedTagError.
     def tag_missing(name, attributes, &block)
       raise UndefinedTagError.new(name)
     end
-
+    
     # Returns the state of the current render stack. Useful from inside
     # a tag definition. Normally just use TagBinding#nesting.
     def current_nesting
       @tag_binding_stack.collect { |tag| tag.name }.join(':')
     end
-
+    
     private
-
+      
       # A convienence method for managing the various parts of the
       # tag binding stack.
       def stack(name, attributes, block)
@@ -94,7 +94,7 @@ module Radius
         @tag_binding_stack.pop
         result
       end
-
+      
       # Returns a fully qualified tag name based on state of the
       # tag binding stack.
       def qualified_tag_name(name)

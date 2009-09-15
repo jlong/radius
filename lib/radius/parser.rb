@@ -18,7 +18,7 @@ module Radius
         options = context
         context = options[:context] || options['context'] || Context.new
       end
-      options = Util.symbolize_keys(options)
+      options = Utility.symbolize_keys(options)
       @context = context
       @tag_prefix = options[:tag_prefix]
     end
