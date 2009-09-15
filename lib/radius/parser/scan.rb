@@ -1,5 +1,7 @@
+
 # line 1 "scan.rl"
-# line 82 "scan.rl"
+
+# line 83 "scan.rl"
 
 
 module Radius
@@ -35,7 +37,7 @@ module Radius
       
       @prefix = prefix
       
-# line 39 "scan.rb"
+# line 41 "scan.rb"
 class << self
 	attr_accessor :_parser_actions
 	private :_parser_actions, :_parser_actions=
@@ -347,9 +349,10 @@ class << self
 end
 self.parser_en_main = 49;
 
-# line 117 "scan.rl"
+
+# line 118 "scan.rl"
       
-# line 353 "scan.rb"
+# line 356 "scan.rb"
 begin
 	p ||= 0
 	pe ||= data.length
@@ -358,9 +361,10 @@ begin
 	te = nil
 	act = 0
 end
-# line 118 "scan.rl"
+
+# line 119 "scan.rl"
       
-# line 364 "scan.rb"
+# line 368 "scan.rb"
 begin
 	_klen, _trans, _keys, _acts, _nacts = nil
 	_goto_level = 0
@@ -395,7 +399,7 @@ begin
 ts = p
 		end
 # line 1 "scan.rl"
-# line 399 "scan.rb"
+# line 403 "scan.rb"
 		end # from state action switch
 	end
 	if _trigger_goto
@@ -472,67 +476,74 @@ when 1 then
 		begin
 
 	  if data[mark_pfx..p-1] != @prefix
-	    cs = 48;
+      @nodes.last << data[mark_pfx-1..p]
+	    	begin
+		p += 1
+		_trigger_goto = true
+		_goto_level = _out
+		break
+	end
+
     end
 			end
 # line 6 "scan.rl"
 when 2 then
-# line 11 "scan.rl"
+# line 12 "scan.rl"
 		begin
  mark_stg = p 		end
-# line 11 "scan.rl"
-when 3 then
 # line 12 "scan.rl"
+when 3 then
+# line 13 "scan.rl"
 		begin
  @starttag = data[mark_stg..p-1] 		end
-# line 12 "scan.rl"
-when 4 then
 # line 13 "scan.rl"
+when 4 then
+# line 14 "scan.rl"
 		begin
  mark_attr = p 		end
-# line 13 "scan.rl"
-when 5 then
 # line 14 "scan.rl"
+when 5 then
+# line 15 "scan.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 14 "scan.rl"
+# line 15 "scan.rl"
 when 6 then
-# line 23 "scan.rl"
+# line 24 "scan.rl"
 		begin
  mark_nat = p 		end
-# line 23 "scan.rl"
-when 7 then
 # line 24 "scan.rl"
+when 7 then
+# line 25 "scan.rl"
 		begin
  @nat = data[mark_nat..p-1] 		end
-# line 24 "scan.rl"
-when 8 then
 # line 25 "scan.rl"
+when 8 then
+# line 26 "scan.rl"
 		begin
  mark_vat = p 		end
-# line 25 "scan.rl"
-when 9 then
 # line 26 "scan.rl"
+when 9 then
+# line 27 "scan.rl"
 		begin
  @vat = data[mark_vat..p-1] 		end
-# line 26 "scan.rl"
+# line 27 "scan.rl"
 when 10 then
-# line 28 "scan.rl"
+# line 29 "scan.rl"
 		begin
  @flavor = :open 		end
-# line 28 "scan.rl"
-when 11 then
 # line 29 "scan.rl"
+when 11 then
+# line 30 "scan.rl"
 		begin
  @flavor = :self 		end
-# line 29 "scan.rl"
-when 12 then
 # line 30 "scan.rl"
+when 12 then
+# line 31 "scan.rl"
 		begin
  @flavor = :close 		end
-# line 30 "scan.rl"
+# line 31 "scan.rl"
 when 15 then
 # line 1 "scan.rl"
 		begin
@@ -540,17 +551,17 @@ te = p+1
 		end
 # line 1 "scan.rl"
 when 16 then
-# line 68 "scan.rl"
+# line 69 "scan.rl"
 		begin
 act = 1;		end
-# line 68 "scan.rl"
+# line 69 "scan.rl"
 when 17 then
-# line 77 "scan.rl"
+# line 78 "scan.rl"
 		begin
 act = 2;		end
-# line 77 "scan.rl"
+# line 78 "scan.rl"
 when 18 then
-# line 77 "scan.rl"
+# line 78 "scan.rl"
 		begin
 te = p+1
  begin 
@@ -558,9 +569,9 @@ te = p+1
 	    @tagstart = p
 	   end
 		end
-# line 77 "scan.rl"
+# line 78 "scan.rl"
 when 19 then
-# line 68 "scan.rl"
+# line 69 "scan.rl"
 		begin
 te = p
 p = p - 1; begin 
@@ -579,9 +590,9 @@ p = p - 1; begin
 
 	   end
 		end
-# line 68 "scan.rl"
+# line 69 "scan.rl"
 when 20 then
-# line 77 "scan.rl"
+# line 78 "scan.rl"
 		begin
 te = p
 p = p - 1; begin 
@@ -589,9 +600,9 @@ p = p - 1; begin
 	    @tagstart = p
 	   end
 		end
-# line 77 "scan.rl"
+# line 78 "scan.rl"
 when 21 then
-# line 77 "scan.rl"
+# line 78 "scan.rl"
 		begin
  begin p = ((te))-1; end
  begin 
@@ -599,7 +610,7 @@ when 21 then
 	    @tagstart = p
 	   end
 		end
-# line 77 "scan.rl"
+# line 78 "scan.rl"
 when 22 then
 # line 1 "scan.rl"
 		begin
@@ -630,7 +641,7 @@ when 22 then
 end 
 			end
 # line 1 "scan.rl"
-# line 634 "scan.rb"
+# line 645 "scan.rb"
 			end # action switch
 		end
 	end
@@ -651,7 +662,7 @@ when 13 then
 		begin
 ts = nil;		end
 # line 1 "scan.rl"
-# line 655 "scan.rb"
+# line 666 "scan.rb"
 		end # to state action switch
 	end
 	if _trigger_goto
@@ -681,7 +692,8 @@ end
 	end
 	end
 	end
-# line 119 "scan.rl"
+
+# line 120 "scan.rl"
       return p
     end
   end

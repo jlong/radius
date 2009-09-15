@@ -5,7 +5,8 @@
 	action _prefix { mark_pfx = p }
 	action prefix {
 	  if data[mark_pfx..p-1] != @prefix
-	    fnext Closeout;
+      @nodes.last << data[mark_pfx-1..p]
+	    fbreak;
     end
 	}
 	action _starttag { mark_stg = p }
