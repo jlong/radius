@@ -1,34 +1,17 @@
 = Radius -- Powerful Tag-Based Templates
 
-* http://rubyforge.org/projects/radius/
-
-== DESCRIPTION:
-
 Radius is a powerful tag-based template language for Ruby inspired by the template languages
 used in MovableType[http://www.movabletype.org] and TextPattern[http://www.textpattern.com].
 It uses tags similar to XML, but can be used to generate any form of plain text (HTML, e-mail,
 etc...).
 
-== FEATURES/PROBLEMS:
-
-This is a prioritized roadmap for future releases:
-
-1. Clean up the current code base. [Done]
-
-2. Add support for multi-level contexts: tags should be able to be
-   defined to only be valid within other sets of tags. [Done]
-
-3. Create a simple DSL for defining contexts. [Done]
-
-4. Optimize for speed, modify scan.rl to emit C.
-
-== SYNOPSIS:
+== Usage
 
 With Radius, it is extremely easy to create custom tags and parse them. Here's a small
 example:
 
   require 'radius'
-
+  
   # Define tags on a context that will be available to a template:
   context = Radius::Context.new do |c|
     c.define_tag 'hello' do
@@ -47,7 +30,7 @@ example:
   
   # Parse tags and output the result
   puts parser.parse(%{A small example:\n<r:repeat times="3">* <r:hello />!\n</r:repeat>})
-  
+
 Output:
 
   A small example:
@@ -55,37 +38,36 @@ Output:
   * Hello world!
   * Hello world!
 
-Read the QUICKSTART file to get up and running fast with Radius.
 
-== REQUIREMENTS:
+== Quick Start
 
-Radius does not have external requirements for running.
+Read the QUICKSTART file to get up and running with Radius.
 
-Ragel is required to create the ruby parser from the ragel specificiation,
+
+= Requirements
+ 
+Radius does not have any external requirements for using the library in your
+own programs.
+ 
+Ragel is required to create the ruby parser from the Ragel specification,
 and both Ragel and Graphviz are required to draw the state graph for the
 parser.
 
-== INSTALL:
+
+== Installation
 
 It is recommended that you install Radius using the RubyGems packaging system:
 
-  % gem install radius
+  % gem install --remote radius
 
-== DOWNLOAD:
+You can also install Radius by copying lib/radius.rb into the Ruby load path.
 
-The latest version of Radius can be found on RubyForge:
 
-http://rubyforge.org/projects/radius/
-
-Experimental and development versions of Radius can be found on Github:
-
-http://github.com/jlong/radius/
-
-== LICENSE:
+== License
 
 Radius is free software and may be redistributed under the terms of the MIT-LICENSE:
 
-Copyright (c) 2006, John W. Long
+Copyright (c) 2006-2009, John W. Long
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this
 software and associated documentation files (the "Software"), to deal in the Software
@@ -102,3 +84,38 @@ PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS 
 FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
 OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
+
+
+== Roadmap
+
+This is a prioritized roadmap for future releases:
+
+1. Clean up the current code base. [Done]
+
+2. Add support for multi-level contexts: tags should be able to be
+   defined to only be valid within other sets of tags. [Done]
+
+3. Create a simple DSL for defining contexts. [Done]
+
+4. Optimize for speed, modify scan.rl to emit C.
+
+
+== Development
+
+The latest version of Radius can be found on RubyForge:
+
+http://rubyforge.org/projects/radius
+
+Experimental and development versions of Radius can be found on Github:
+ 
+http://github.com/jlong/radius
+
+If you are interested in helping with the development of Radiant, feel free to
+fork the project on GitHub and send me a pull request.
+
+
+Enjoy!
+
+--
+John Long ::
+http://wiseheartdesign.com
