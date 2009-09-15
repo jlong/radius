@@ -243,6 +243,12 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_equal "<p>Hello world!</p>", @parser.parse('<p><radius:hello /></p>')
   end
   
+  def test_parse_with_other_radius_like_tags
+    define_tag('hello') { "hello" }
+    @parser = Radius::Parser.new(@context, :tag_prefix => "ralph")
+    assert_equal "hello", @parser.parse("<r:ralph:hello />")
+  end
+  
   protected
   
     def assert_parse_output(output, input, message = nil)
