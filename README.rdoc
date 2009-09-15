@@ -114,8 +114,5 @@ If you are interested in helping with the development of Radiant, feel free to
 fork the project on GitHub and send me a pull request.
 
 
-Enjoy!
-
---
 John Long ::
 http://wiseheartdesign.com

@@ -1,4 +1,4 @@
-%w[rubygems rake rake/clean fileutils newgem rubigen hoe].each { |f| require f }
+%w(rubygems rake rake/clean fileutils newgem rubigen hoe).each { |f| require f }
 
 require 'lib/radius/version'
 
@@ -18,7 +18,8 @@ Hoe.spec('Radius') do |p|
     ['newgem', ">= #{::Newgem::VERSION}"]
   ]
   p.readme_file = 'README.rdoc'
-  p.clean_globs |= %w[**/.DS_Store tmp *.log] # Remove these files on "rake clean"
+  p.extra_rdoc_files |= %w(README.rdoc QUICKSTART.rdoc)
+  p.clean_globs |= %w(**/.DS_Store tmp *.log) # Remove these files on "rake clean"
   path = (p.rubyforge_name == p.name) ? p.rubyforge_name : "\#{p.rubyforge_name}/\#{p.name}"
   p.remote_rdoc_dir = File.join(path.gsub(/^#{p.rubyforge_name}\/?/,''), 'rdoc')
   p.rsync_args = '-av --delete --ignore-errors'
