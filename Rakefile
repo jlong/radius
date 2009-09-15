@@ -4,8 +4,9 @@ require 'lib/radius/version'
 
 # Generate all the Rake tasks
 # Run 'rake -T' to see list of generated tasks (from gem root directory)
-Hoe.spec('Radius') do |p|
+Hoe.spec 'radius' do |p|
   p.version = Radius::Version
+  p.url = "http://radius.rubyforge.org"
   p.developer('John W. Long', 'me@johnwlong.com')
   p.author = [
     "John W. Long (me@johnwlong.com)",

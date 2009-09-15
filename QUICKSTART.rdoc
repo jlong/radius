@@ -8,7 +8,7 @@ the tags that will be used in the template. This is actually quite simple:
 
   require 'radius'
   
-  context = Context.new
+  context = Radius::Context.new
   context.define_tag "hello" do |tag|
     "Hello #{tag.attr['name'] || 'World'}!"
   end

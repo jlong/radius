@@ -237,6 +237,12 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_raises(Radius::WrongEndTagError) { @parser.parse("<r:reverse><r:capitalize></r:reverse>") }
   end
   
+  def test_parse_with_longer_tag_prefix
+    define_tag("hello") { |tag| "Hello world!" }
+    @parser = Radius::Parser.new(@context)
+    assert_equal "<p>Hello World!</p>", @parser.parse('<p><radius:hello /></p>')
+  end
+  
   protected
   
     def assert_parse_output(output, input, message = nil)
