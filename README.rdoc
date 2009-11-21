@@ -110,7 +110,7 @@ Experimental and development versions of Radius can be found on Github:
  
 http://github.com/jlong/radius
 
-If you are interested in helping with the development of Radiant, feel free to
+If you are interested in helping with the development of Radius, feel free to
 fork the project on GitHub and send me a pull request.
 
 
