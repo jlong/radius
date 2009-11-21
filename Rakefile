@@ -11,7 +11,8 @@ Hoe.spec 'radius' do |p|
   p.author = [
     "John W. Long (me@johnwlong.com)",
     "David Chelimsky (dchelimsky@gmail.com)",
-    "Bryce Kerley (bkerley@brycekerley.net)"
+    "Bryce Kerley (bkerley@brycekerley.net)",
+    "Todd Willey (todd@rubidine.com)"
   ]
   p.changes              = p.paragraphs_of("CHANGELOG", 1..2).join("\n\n")
   p.rubyforge_name       = p.name
