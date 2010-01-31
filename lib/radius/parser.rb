@@ -15,7 +15,7 @@ module Radius
     # Creates a new parser object initialized with a Context.
     def initialize(context = Context.new, options = {})
       if context.kind_of?(Hash) and options.empty?
-        options, context = context, nil
+        options, context = context, (context[:context] || context['context'])
       end
       options = Utility.symbolize_keys(options)
       self.context = context ? context.dup : Context.new
