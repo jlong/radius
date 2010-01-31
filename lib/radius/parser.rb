@@ -26,13 +26,6 @@ module Radius
     def parse(string)
       @stack = [ParseContainerTag.new { |t| t.contents.to_s }]
       tokenize(string)
-
-      report = "\n"
-      report << "Parser: #{self.inspect}\n"
-      report << "String: #{string.inspect}\n"
-      report << "Tokens: #{@tokens.inspect}"
-      puts report
-
       stack_up
       @stack.last.to_s
     end
