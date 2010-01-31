@@ -6,6 +6,12 @@ module Radius
       @object = object
       @hash = {}
     end
+
+    def dup
+      rv = self.class.new
+      rv.instance_variable_set(:@hash, @hash.dup)
+      rv
+    end
     
     def method_missing(method, *args, &block)
       symbol = (method.to_s =~ /^(.*?)=$/) ? $1.intern : method

@@ -7,33 +7,15 @@ module Radius
   class Context
     # A hash of tag definition blocks that define tags accessible on a Context.
     attr_accessor :definitions # :nodoc:
+    attr_accessor :globals     # :nodoc:
 
     # Creates a new Context object.
     def initialize(&block)
       @definitions = {}
-
-      @globals_by_thread = {}
-      @stacks_by_thread = {}
-
+      @tag_binding_stack = []
+      @globals = DelegatingOpenStruct.new
       with(&block) if block_given?
     end
-
-    # Thread safe globals allow a context to run multiple parsers in parallel.
-    def globals # :nodoc:
-      # lazy initialize here instead of init - we want init to be able
-      # to be done in main thread, but building parsers and assigning globals
-      # in sub-threads
-      unless @globals_by_thread[Thread.current.object_id]
-        @globals_by_thread[Thread.current.object_id] = DelegatingOpenStruct.new
-        ObjectSpace.define_finalizer(
-                                     Thread.current,
-                                     proc{|id| @globals_by_thread.delete(id)}
-                                     )
-      end
-      @globals_by_thread[Thread.current.object_id]
-   end
-
-
 
     # Yield an instance of self for tag definitions:
     #
@@ -95,39 +77,36 @@ module Radius
     # Returns the state of the current render stack. Useful from inside
     # a tag definition. Normally just use TagBinding#nesting.
     def current_nesting
-      tag_binding_stack.collect { |tag| tag.name }.join(':')
+      @tag_binding_stack.collect { |tag| tag.name }.join(':')
+    end
+
+    # make a usable copy of this context
+    def dup # :nodoc:
+      rv = self.class.new
+      rv.globals = globals.dup
+      rv.definitions = definitions.dup
+      rv
     end
 
     private
-      def tag_binding_stack
-        unless @stacks_by_thread[Thread.current.object_id]
-          @stacks_by_thread[Thread.current.object_id] = []
-          ObjectSpace.define_finalizer(
-            Thread.current,
-            proc{|id| @stacks_by_thread.delete(id)}
-          )
-        end
-        @stacks_by_thread[Thread.current.object_id]
-      end
-
 
       # A convienence method for managing the various parts of the
       # tag binding stack.
       def stack(name, attributes, block)
-        previous = tag_binding_stack.last
+        previous = @tag_binding_stack.last
         previous_locals = previous.nil? ? globals : previous.locals
         locals = DelegatingOpenStruct.new(previous_locals)
         binding = TagBinding.new(self, locals, name, attributes, block)
-        tag_binding_stack.push(binding)
+        @tag_binding_stack.push(binding)
         result = yield(binding)
-        tag_binding_stack.pop
+        @tag_binding_stack.pop
         result
       end
 
       # Returns a fully qualified tag name based on state of the
       # tag binding stack.
       def qualified_tag_name(name)
-        nesting_parts = tag_binding_stack.collect { |tag| tag.name }
+        nesting_parts = @tag_binding_stack.collect { |tag| tag.name }
         nesting_parts << name unless nesting_parts.last == name
         specific_name = nesting_parts.join(':') # specific_name always has the highest specificity
         unless @definitions.has_key? specific_name

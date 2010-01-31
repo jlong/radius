@@ -15,12 +15,11 @@ module Radius
     # Creates a new parser object initialized with a Context.
     def initialize(context = Context.new, options = {})
       if context.kind_of?(Hash) and options.empty?
-        options = context
-        context = options[:context] || options['context'] || Context.new
+        options, context = context, nil
       end
       options = Utility.symbolize_keys(options)
-      @context = context
-      @tag_prefix = options[:tag_prefix] || 'radius'
+      self.context = context ? context.dup : Context.new
+      self.tag_prefix = options[:tag_prefix] || 'radius'
     end
 
     # Parses string for tags, expands them, and returns the result.
