@@ -27,7 +27,7 @@ class RadiusContextTest < Test::Unit::TestCase
   end
   
   def test_render_tag
-    define_tag "hello" do |tag|
+    define_global_tag "hello" do |tag|
       "Hello #{tag.attr['name'] || 'World'}!"
     end
     assert_render_tag_output 'Hello World!', 'hello'

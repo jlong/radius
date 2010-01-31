@@ -238,14 +238,14 @@ class RadiusParserTest < Test::Unit::TestCase
   end
   
   def test_parse_with_default_tag_prefix
-    define_tag("hello") { |tag| "Hello world!" }
     @parser = Radius::Parser.new(@context)
+    define_tag("hello") { |tag| "Hello world!" }
     assert_equal "<p>Hello world!</p>", @parser.parse('<p><radius:hello /></p>')
   end
   
   def test_parse_with_other_radius_like_tags
-    define_tag('hello') { "hello" }
     @parser = Radius::Parser.new(@context, :tag_prefix => "ralph")
+    define_tag('hello') { "hello" }
     assert_equal "<r:ralph:hello />", @parser.parse("<r:ralph:hello />")
   end
   

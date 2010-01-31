@@ -68,15 +68,14 @@ class QuickstartTest < Test::Unit::TestCase
     attr_accessor :name, :age, :email
   end
   def test_exposing_objects_example
-    context = Radius::Context.new
-    parser = Radius::Parser.new(context)
+    parser = Radius::Parser.new
     
-    context.define_tag "count", :for => 1
+    parser.context.define_tag "count", :for => 1
     assert_equal "1", parser.parse("<radius:count />")
     
     user = User.new
     user.name, user.age, user.email = "John", 29, "john@example.com"
-    context.define_tag "user", :for => user, :expose => [ :name, :age, :email ]
+    parser.context.define_tag "user", :for => user, :expose => [ :name, :age, :email ]
     assert_equal "John", parser.parse("<radius:user><radius:name /></radius:user>")
     
     assert_equal "John", parser.parse("<radius:user:name />")
@@ -94,16 +93,15 @@ class QuickstartTest < Test::Unit::TestCase
   end
   
   def test_tag_globals_example
-    context = Radius::Context.new
-    parser = Radius::Parser.new(context)
+    parser = Radius::Parser.new
     
-    context.define_tag "inc" do |tag|
+    parser.context.define_tag "inc" do |tag|
       tag.globals.count ||= 0
       tag.globals.count += 1
       ""
     end
     
-    context.define_tag "count" do |tag|
+    parser.context.define_tag "count" do |tag|
       tag.globals.count || 0
     end
     

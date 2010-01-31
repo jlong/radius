@@ -22,6 +22,10 @@ unless defined? RADIUS_LIB
     end
     
     def define_tag(name, options = {}, &block)
+      @parser.context.define_tag name, options, &block
+    end
+    
+    def define_global_tag(name, options = {}, &block)
       @context.define_tag name, options, &block
     end
   end
