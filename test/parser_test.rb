@@ -248,7 +248,19 @@ class RadiusParserTest < Test::Unit::TestCase
     define_tag('hello') { "hello" }
     assert_equal "<r:ralph:hello />", @parser.parse("<r:ralph:hello />")
   end
-  
+
+  def test_copyin_global_values
+    @context.globals.foo = 'bar'
+    assert_equal 'bar', Radius::Parser.new(@context).context.globals.foo
+  end
+
+  def test_does_not_pollute_copied_globals
+    @context.globals.foo = 'bar'
+    parser = Radius::Parser.new(@context)
+    parser.context.globals.foo = '[baz]'
+    assert_equal 'bar', @context.globals.foo
+  end
+
   protected
   
     def assert_parse_output(output, input, message = nil)
