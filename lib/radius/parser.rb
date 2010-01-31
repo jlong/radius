@@ -26,6 +26,13 @@ module Radius
     def parse(string)
       @stack = [ParseContainerTag.new { |t| t.contents.to_s }]
       tokenize(string)
+
+      report = "\n"
+      report << "Parser: #{self.inspect}\n"
+      report << "String: #{string.inspect}\n"
+      report << "Tokens: #{@tokens.inspect}"
+      puts report
+
       stack_up
       @stack.last.to_s
     end
@@ -33,7 +40,7 @@ module Radius
     protected
     # Convert the string into a list of text blocks and scanners (tokens)
     def tokenize(string)
-      @tokens = Scanner::operate(tag_prefix, string)
+      @tokens = Scanner.new.operate(tag_prefix, string)
     end
     
     def stack_up

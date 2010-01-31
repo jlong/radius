@@ -84,7 +84,7 @@
 
 module Radius
   class Scanner
-    def self.operate(prefix, data)
+    def operate(prefix, data)
       buf = ""
       csel = ""
       @prematch = ''
@@ -105,7 +105,7 @@ module Radius
     end
     
     private
-    def self.perform_parse(prefix, data)
+    def perform_parse(prefix, data)
       stack = []
       p = 0
       ts = 0
