@@ -20,7 +20,6 @@ class MultithreadTest < Test::Unit::TestCase
         parser.context.globals.thread_id = Thread.current.object_id
         expected = "#{Thread.current.object_id} / #{parser.context.globals.object_id}"
         actual = parser.parse('<r:thread />')
-        p actual
         assert_equal expected, actual
       end
     end
