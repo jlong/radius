@@ -4,10 +4,10 @@ require 'lib/radius/version'
 
 # Generate all the Rake tasks
 # Run 'rake -T' to see list of generated tasks (from gem root directory)
-Hoe.spec 'radius' do |p|
+Hoe.spec 'radius-ts' do |p|
   p.version = Radius::Version.to_s
-  p.url = "http://radius.rubyforge.org"
-  p.developer('John W. Long', 'me@johnwlong.com')
+  p.url = "http://github.com/xtoddx/radius-ts"
+  p.developer('Todd Willey', 'todd@rubidine.com')
   p.author = [
     "John W. Long (me@johnwlong.com)",
     "David Chelimsky (dchelimsky@gmail.com)",
@@ -26,6 +26,8 @@ Hoe.spec 'radius' do |p|
   p.remote_rdoc_dir = File.join(path.gsub(/^#{p.rubyforge_name}\/?/,''), 'rdoc')
   p.rsync_args = '-av --delete --ignore-errors'
   p.test_globs = "test/**/*_test.rb"
+  p.summary = "Radius templating language with thread safety patches."
+  p.description = "A templating lanuage based on MovableType and TextPattern.  Originally implemented by John Long."
 end
 
 require 'newgem/tasks' # load /tasks/*.rake

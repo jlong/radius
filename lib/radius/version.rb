@@ -1,8 +1,8 @@
 module Radius
   module Version
-    Major = '0'
-    Minor = '6'
-    Tiny  = '1'
+    Major = '1'
+    Minor = '0'
+    Tiny  = '0'
     
     class << self
       def to_s
