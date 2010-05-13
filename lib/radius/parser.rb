@@ -11,6 +11,9 @@ module Radius
     # The string that prefixes all tags that are expanded by a parser
     # (the part in the tag name before the first colon).
     attr_accessor :tag_prefix
+
+    # The class that performs tokenization of the input string
+    attr_accessor :scanner
   
     # Creates a new parser object initialized with a Context.
     def initialize(context = Context.new, options = {})
@@ -20,6 +23,7 @@ module Radius
       options = Utility.symbolize_keys(options)
       self.context = context ? context.dup : Context.new
       self.tag_prefix = options[:tag_prefix] || 'radius'
+      self.scanner = options[:scanner] || Radius::Scanner.new
     end
 
     # Parses string for tags, expands them, and returns the result.
@@ -33,7 +37,7 @@ module Radius
     protected
     # Convert the string into a list of text blocks and scanners (tokens)
     def tokenize(string)
-      @tokens = Scanner.new.operate(tag_prefix, string)
+      @tokens = scanner.operate(tag_prefix, string)
     end
     
     def stack_up
