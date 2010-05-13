@@ -1,4 +1,8 @@
 = Change Log
+=== 1.1.0-ts
+* Allow switching scanners that tokenize templates.
+* Include SquiggleScanner to parse tags that look like "{ hello /}"
+
 === 1.0.0-ts
 * Create a fork that is threadsafe (per-parser).
 * Bump revision to 1.0.0 since the API is stable
