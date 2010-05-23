@@ -23,4 +23,8 @@ class RadiusUtilityTest < Test::Unit::TestCase
   def test_camelize
     assert_equal Radius::Utility.camelize('ab_cd_ef'), 'AbCdEf'
   end
+
+  def test_array_to_s
+    assert_equal Radius::Utility.array_to_s(['a', 1, [:c]]), 'a1c'
+  end
 end
