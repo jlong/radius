@@ -16,9 +16,22 @@ unless defined? RADIUS_LIB
       Radius::Context.new do |c|
         c.define_tag("reverse"   ) { |tag| tag.expand.reverse }
         c.define_tag("capitalize") { |tag| tag.expand.upcase  }
-        c.define_tag("attr"      ) { |tag| tag.attr.inspect   }
         c.define_tag("echo"      ) { |tag| tag.attr['value']  }
         c.define_tag("wrap"      ) { |tag| "[#{tag.expand}]"  }
+        c.define_tag("attr") do |tag|
+          attributes = tag.attr
+          output = []
+          output << "{"
+          attributes.keys.sort.each do |key|
+            output << key.inspect
+            output << "=>"
+            output << attributes[key].inspect
+            output << ", "
+          end
+          output.pop if output.last == ", "
+          output << "}"
+          output.join
+        end
       end
     end
     

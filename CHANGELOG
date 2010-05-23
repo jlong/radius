@@ -1,6 +1,7 @@
 = Change Log
 
 == edge
+* Support for Rubinius [jlong]
 * Support for Ruby 1.9 [aemadrid]
 * More tests [aemadrid]
 * Fixed issue #5 - problem with other namespace tags [jemmyw]

@@ -13,6 +13,7 @@ begin
     ]
     gem.files = FileList["[A-Z]*", "{bin,lib,tasks,test}/**/*"].exclude("tmp")
     gem.extra_rdoc_files = ['README.rdoc', 'QUICKSTART.rdoc', 'LICENSE', 'CHANGELOG']
+    gem.add_development_dependency('redcloth')
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
   end
   Jeweler::GemcutterTasks.new
