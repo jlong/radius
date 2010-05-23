@@ -235,6 +235,11 @@ class RadiusSquiggleTest < Test::Unit::TestCase
     assert_equal 'bar', @context.globals.foo
   end
 
+  def test_parse_with_other_namespaces
+    @parser = Radius::Parser.new(@context, :tag_prefix => 'r')
+    assert_equal "{fb:test}hello world{/fb:test}", @parser.parse("{fb:test}hello world{/fb:test}")
+  end
+
   protected
   
     def assert_parse_output(output, input, message = nil)
