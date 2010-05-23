@@ -6,15 +6,16 @@
     disposable_string = input.substring(mark_pfx, p-1);
 	  if (disposable_string != prefix) {
       // pass the text through
-      return_value.getLast().name += disposable_string;
-	    fbreak;
+      pass_through(return_value, disposable_string);
     }
 	}
 	action _starttag { mark_stg = p; }
-	action starttag { starttag = input.substring(mark_stg, p-1); }
+	action starttag { name = input.substring(mark_stg, p); }
 	action _attr { mark_attr = p; }
 	action attr {
+    System.out.println("ATTR: " + nat + ", " + vat);
     attributes.put(nat, vat);
+    System.out.println("SIZE OF KEYS NOW: " + attributes.keySet().size());
 	}
 	
 	action prematch {
@@ -25,9 +26,9 @@
 	}
 	
 	action _nameattr { mark_nat = p; }
-	action nameattr { nat = input.substring(mark_nat, p-1); }
+	action nameattr { nat = input.substring(mark_nat, p); }
 	action _valattr { mark_vat = p; }
-	action valattr { vat = input.substring(mark_vat, p-1); }
+	action valattr { vat = input.substring(mark_vat, p); }
 	
 	action opentag  { flavor = Flavor.OPEN; }
 	action selftag  { flavor = Flavor.SELF; }
@@ -35,7 +36,6 @@
 	
 	action stopparse {
 	  cursor = p;
-	  fbreak;
 	}
 	
 	
@@ -70,32 +70,28 @@
 	
 	main := |*
 	  SomeTag => {
-      tag = new Tag(prefix, name, flavor, attrs, false);
+      System.out.println("SomeTag: " + prefix + ", " + name);
+      tag = new Tag(prefix, name, flavor, attributes, false);
 	    prefix = null;
 	    name = "";
 	    flavor = Flavor.TASTELESS;
-	    attrs = new HashMap();
+	    attributes = new HashMap();
 	    return_value.add(tag);
-      fbreak;
 	  };
 	  any => {
-      if (return_value.getLast().passthrough) {
-        return_value.getLast().name += input.substring(p, p);
-      } else {
-        tag = new Tag((String)null, input.substring(p, p+1), Flavor.TASTELESS, (HashMap)null, true);
-        return_value.add(tag);
-      }
+      System.out.println("any: " + p + ", " + input.substring(p, p + 1));
+      pass_through(return_value, input.substring(p, p + 1));
 	    tagstart = p;
 	  };
 	*|;
 }%%
 
-package Radius;
+package radius.parser;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 
-public class Scanner {
+public class JavaScanner {
 
   public enum Flavor { TASTELESS, OPEN, SELF, CLOSE }
 
@@ -115,6 +111,20 @@ public class Scanner {
     }
   }
 
+  void pass_through(LinkedList<Tag> rv, String str) {
+    System.out.println("  PASSTHROUGH: " + str);
+    if (rv.size() > 0) {
+      Tag last = rv.getLast();
+      if (last.passthrough) {
+        System.out.println("    APPEND TO " + last.name);
+        last.name += str;
+        return;
+      }
+    }
+    Tag t = new Tag((String)null, str, Flavor.TASTELESS, (HashMap)null, true);
+    rv.add(t);
+  }
+
   %% write data;
 
   public LinkedList<Tag> operate(String prefix, String input) {
@@ -122,11 +132,9 @@ public class Scanner {
     Tag tag;
     String disposable_string;
     String prematch = "";
-    String starttag = "";
 
     String name = "";
     Flavor flavor = Flavor.TASTELESS;
-    HashMap attrs = new HashMap();
 
     int tagstart;
     int mark_pfx = 0;
@@ -145,21 +153,12 @@ public class Scanner {
     int p = 0;
     int pe = data.length;
     int eof = pe;
-    int[] stack = new int[32];
-    int top;
     int act;
     int ts;
     int te;
 
     LinkedList<Tag> return_value = new LinkedList<Tag>();
     char[] remainder = data;
-
-/*
-    while(remainder.length > 0) {
-      p = perform_parse(prefix, remainder)
-      remainder = new String(remainder).substring(p).toCharArray();
-    }
-*/
 
     %% write init;
     %% write exec;

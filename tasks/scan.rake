@@ -2,11 +2,12 @@ namespace :scan do
   desc 'Generate the parsers'
   task 'build' => [
     'lib/radius/parser/scanner.rb',
-    'lib/radius/parser/squiggle_scanner.rb'
+    'lib/radius/parser/squiggle_scanner.rb',
+    'lib/radius/parser/java_scanner.jar'
   ]
   
   desc 'Generate a PDF state graph from the parsers'
-  task 'graph' => ['doc/scanner.pdf', 'doc/squiggle_scanner.rb']
+  task 'graph' => ['doc/scanner.pdf', 'doc/squiggle_scanner.pdf']
   
   desc 'turn the scanner.rl file into a ruby file'
   file 'lib/radius/parser/scanner.rb' => 'lib/radius/parser/scanner.rl' do |t|
@@ -21,6 +22,27 @@ namespace :scan do
   do |t|
     cd 'lib/radius/parser' do
       sh "ragel -R -F1 squiggle_scanner.rl"
+    end
+  end
+
+  desc 'package JavaScanner into a jar file'
+  file 'lib/radius/parser/java_scanner.jar' => 'lib/radius/parser/JavaScanner.class' do
+    cd 'lib' do
+      sh "jar -cf radius/parser/java_scanner.jar radius/parser/*.class"
+    end
+  end
+
+  desc 'turn the JavaScanner.java file into a java class file'
+  file 'lib/radius/parser/JavaScanner.class' => 'lib/radius/parser/JavaScanner.java' do |t|
+    cd 'lib' do
+      sh "javac radius/parser/JavaScanner.java"
+    end
+  end
+
+  desc 'turn the JavaScanner.rl file into a java source file'
+  file 'lib/radius/parser/JavaScanner.java' => 'lib/radius/parser/JavaScanner.rl' do |t|
+    cd 'lib/radius/parser' do
+      sh "ragel -J -F1 JavaScanner.rl"
     end
   end
 
