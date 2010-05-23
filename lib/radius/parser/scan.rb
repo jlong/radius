@@ -3,6 +3,12 @@
 
 # line 84 "scan.rl"
 
+# Make sure Ruby 1.8.6 can respond to Integer#ord
+unless 0.respond_to?(:ord)
+  class Integer
+    def ord; self; end
+  end
+end
 
 module Radius
   class Scanner
@@ -418,9 +424,9 @@ ts = p
 	        break if _upper < _lower
 	        _mid = _lower + ( (_upper - _lower) >> 1 )
 
-	        if data[p] < _parser_trans_keys[_mid]
+	        if data[p].ord < _parser_trans_keys[_mid]
 	           _upper = _mid - 1
-	        elsif data[p] > _parser_trans_keys[_mid]
+	        elsif data[p].ord > _parser_trans_keys[_mid]
 	           _lower = _mid + 1
 	        else
 	           _trans += (_mid - _keys)
@@ -439,9 +445,9 @@ ts = p
 	     loop do
 	        break if _upper < _lower
 	        _mid = _lower + (((_upper-_lower) >> 1) & ~1)
-	        if data[p] < _parser_trans_keys[_mid]
+	        if data[p].ord < _parser_trans_keys[_mid]
 	          _upper = _mid - 2
-	        elsif data[p] > _parser_trans_keys[_mid+1]
+	        elsif data[p].ord > _parser_trans_keys[_mid+1]
 	          _lower = _mid + 2
 	        else
 	          _trans += ((_mid - _keys) >> 1)
