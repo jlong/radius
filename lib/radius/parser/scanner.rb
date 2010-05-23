@@ -1,7 +1,7 @@
 
-# line 1 "scan.rl"
+# line 1 "scanner.rl"
 
-# line 83 "scan.rl"
+# line 84 "scanner.rl"
 
 
 module Radius
@@ -37,7 +37,7 @@ module Radius
       
       @prefix = prefix
       
-# line 41 "scan.rb"
+# line 41 "scanner.rb"
 class << self
 	attr_accessor :_parser_trans_keys
 	private :_parser_trans_keys, :_parser_trans_keys=
@@ -773,9 +773,9 @@ end
 self.parser_en_main = 49;
 
 
-# line 118 "scan.rl"
+# line 119 "scanner.rl"
       
-# line 779 "scan.rb"
+# line 779 "scanner.rb"
 begin
 	p ||= 0
 	pe ||= data.length
@@ -785,9 +785,9 @@ begin
 	act = 0
 end
 
-# line 119 "scan.rl"
+# line 120 "scanner.rl"
       
-# line 791 "scan.rb"
+# line 791 "scanner.rb"
 begin
 	testEof = false
 	_slen, _trans, _keys, _inds, _acts, _nacts = nil
@@ -815,7 +815,7 @@ begin
 		begin
 ts = p
 		end
-# line 819 "scan.rb"
+# line 819 "scanner.rb"
 	end
 	_keys = cs << 1
 	_inds = _parser_index_offsets[cs]
@@ -834,15 +834,16 @@ ts = p
 	if _parser_trans_actions[_trans] != 0
 	case _parser_trans_actions[_trans]
 	when 24 then
-# line 5 "scan.rl"
+# line 5 "scanner.rl"
 		begin
  mark_pfx = p 		end
 	when 2 then
-# line 6 "scan.rl"
+# line 6 "scanner.rl"
 		begin
 
 	  if data[mark_pfx..p-1] != @prefix
-      @nodes.last << data[mark_pfx-1..p]
+	    closing = data[mark_pfx-1,1] == '/'
+	    @nodes.last << data[mark_pfx-(closing ? 2 : 1)..p]
 	    	begin
 		p += 1
 		_goto_level = _out
@@ -852,41 +853,41 @@ ts = p
     end
 			end
 	when 3 then
-# line 12 "scan.rl"
+# line 13 "scanner.rl"
 		begin
  mark_stg = p 		end
 	when 4 then
-# line 13 "scan.rl"
+# line 14 "scanner.rl"
 		begin
  @starttag = data[mark_stg..p-1] 		end
 	when 11 then
-# line 14 "scan.rl"
+# line 15 "scanner.rl"
 		begin
  mark_attr = p 		end
 	when 15 then
-# line 15 "scan.rl"
+# line 16 "scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
 	when 5 then
-# line 24 "scan.rl"
+# line 25 "scanner.rl"
 		begin
  mark_nat = p 		end
 	when 7 then
-# line 25 "scan.rl"
+# line 26 "scanner.rl"
 		begin
  @nat = data[mark_nat..p-1] 		end
 	when 8 then
-# line 26 "scan.rl"
+# line 27 "scanner.rl"
 		begin
  mark_vat = p 		end
 	when 10 then
-# line 27 "scan.rl"
+# line 28 "scanner.rl"
 		begin
  @vat = data[mark_vat..p-1] 		end
 	when 27 then
-# line 78 "scan.rl"
+# line 79 "scanner.rl"
 		begin
 te = p+1
  begin 
@@ -895,7 +896,7 @@ te = p+1
 	   end
 		end
 	when 29 then
-# line 78 "scan.rl"
+# line 79 "scanner.rl"
 		begin
 te = p
 p = p - 1; begin 
@@ -904,7 +905,7 @@ p = p - 1; begin
 	   end
 		end
 	when 1 then
-# line 78 "scan.rl"
+# line 79 "scanner.rl"
 		begin
  begin p = ((te))-1; end
  begin 
@@ -941,49 +942,49 @@ p = p - 1; begin
 end 
 			end
 	when 13 then
-# line 14 "scan.rl"
+# line 15 "scanner.rl"
 		begin
  mark_attr = p 		end
-# line 15 "scan.rl"
+# line 16 "scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
 	when 14 then
-# line 15 "scan.rl"
+# line 16 "scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 24 "scan.rl"
+# line 25 "scanner.rl"
 		begin
  mark_nat = p 		end
 	when 18 then
-# line 26 "scan.rl"
+# line 27 "scanner.rl"
 		begin
  mark_vat = p 		end
-# line 14 "scan.rl"
+# line 15 "scanner.rl"
 		begin
  mark_attr = p 		end
 	when 9 then
-# line 26 "scan.rl"
+# line 27 "scanner.rl"
 		begin
  mark_vat = p 		end
-# line 27 "scan.rl"
+# line 28 "scanner.rl"
 		begin
  @vat = data[mark_vat..p-1] 		end
 	when 23 then
-# line 27 "scan.rl"
+# line 28 "scanner.rl"
 		begin
  @vat = data[mark_vat..p-1] 		end
-# line 26 "scan.rl"
+# line 27 "scanner.rl"
 		begin
  mark_vat = p 		end
 	when 31 then
-# line 29 "scan.rl"
+# line 30 "scanner.rl"
 		begin
  @flavor = :open 		end
-# line 69 "scan.rl"
+# line 70 "scanner.rl"
 		begin
 te = p
 p = p - 1; begin 
@@ -1002,10 +1003,10 @@ p = p - 1; begin
 	   end
 		end
 	when 30 then
-# line 30 "scan.rl"
+# line 31 "scanner.rl"
 		begin
  @flavor = :self 		end
-# line 69 "scan.rl"
+# line 70 "scanner.rl"
 		begin
 te = p
 p = p - 1; begin 
@@ -1024,10 +1025,10 @@ p = p - 1; begin
 	   end
 		end
 	when 32 then
-# line 31 "scan.rl"
+# line 32 "scanner.rl"
 		begin
  @flavor = :close 		end
-# line 69 "scan.rl"
+# line 70 "scanner.rl"
 		begin
 te = p
 p = p - 1; begin 
@@ -1050,7 +1051,7 @@ p = p - 1; begin
 		begin
 te = p+1
 		end
-# line 69 "scan.rl"
+# line 70 "scanner.rl"
 		begin
 act = 1;		end
 	when 28 then
@@ -1058,29 +1059,29 @@ act = 1;		end
 		begin
 te = p+1
 		end
-# line 78 "scan.rl"
+# line 79 "scanner.rl"
 		begin
 act = 2;		end
 	when 12 then
-# line 14 "scan.rl"
+# line 15 "scanner.rl"
 		begin
  mark_attr = p 		end
-# line 15 "scan.rl"
+# line 16 "scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 24 "scan.rl"
+# line 25 "scanner.rl"
 		begin
  mark_nat = p 		end
 	when 20 then
-# line 26 "scan.rl"
+# line 27 "scanner.rl"
 		begin
  mark_vat = p 		end
-# line 14 "scan.rl"
+# line 15 "scanner.rl"
 		begin
  mark_attr = p 		end
-# line 15 "scan.rl"
+# line 16 "scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
@@ -1090,27 +1091,27 @@ act = 2;		end
 		begin
 te = p+1
 		end
-# line 15 "scan.rl"
+# line 16 "scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 69 "scan.rl"
+# line 70 "scanner.rl"
 		begin
 act = 1;		end
 	when 19 then
-# line 26 "scan.rl"
+# line 27 "scanner.rl"
 		begin
  mark_vat = p 		end
-# line 14 "scan.rl"
+# line 15 "scanner.rl"
 		begin
  mark_attr = p 		end
-# line 15 "scan.rl"
+# line 16 "scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 24 "scan.rl"
+# line 25 "scanner.rl"
 		begin
  mark_nat = p 		end
 	when 16 then
@@ -1118,15 +1119,15 @@ act = 1;		end
 		begin
 te = p+1
 		end
-# line 14 "scan.rl"
+# line 15 "scanner.rl"
 		begin
  mark_attr = p 		end
-# line 15 "scan.rl"
+# line 16 "scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 69 "scan.rl"
+# line 70 "scanner.rl"
 		begin
 act = 1;		end
 	when 21 then
@@ -1134,21 +1135,21 @@ act = 1;		end
 		begin
 te = p+1
 		end
-# line 26 "scan.rl"
+# line 27 "scanner.rl"
 		begin
  mark_vat = p 		end
-# line 14 "scan.rl"
+# line 15 "scanner.rl"
 		begin
  mark_attr = p 		end
-# line 15 "scan.rl"
+# line 16 "scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 69 "scan.rl"
+# line 70 "scanner.rl"
 		begin
 act = 1;		end
-# line 1152 "scan.rb"
+# line 1153 "scanner.rb"
 	end
 	end
 	end
@@ -1158,7 +1159,7 @@ act = 1;		end
 # line 1 "NONE"
 		begin
 ts = nil;		end
-# line 1162 "scan.rb"
+# line 1163 "scanner.rb"
 	end
 
 	if cs == 0
@@ -1187,7 +1188,7 @@ ts = nil;		end
 end
 	end
 
-# line 120 "scan.rl"
+# line 121 "scanner.rl"
       return p
     end
   end
