@@ -12,18 +12,53 @@ class MultithreadTest < Test::Unit::TestCase
     end
   end
 
-  def test_runs_multithreaded
-    threads = []
-    1000.times do |t|
-      threads << Thread.new do
-        parser = Radius::Parser.new(@context, :tag_prefix => 'r')
-        parser.context.globals.thread_id = Thread.current.object_id
-        expected = "#{Thread.current.object_id} / #{parser.context.globals.object_id}"
-        actual = parser.parse('<r:thread />')
-        assert_equal expected, actual
+  if RUBY_PLATFORM == 'java'
+    require 'radius/parser/jscanner'
+    def test_runs_multithreaded
+      lock = java.lang.String.new("lock")
+      threads = []
+      1000.times do |t|
+        thread = Thread.new do
+                   parser = Radius::Parser.new(
+                              @context,
+                              :tag_prefix => 'r',
+                              :scanner => Radius::JScanner.new
+                            )
+                   parser.context.globals.thread_id = Thread.current.object_id
+                   expected = "#{Thread.current.object_id} / "+
+                              "#{parser.context.globals.object_id}"
+                   actual = parser.parse('<r:thread />')
+                   assert_equal expected, actual
+                 end
+        lock.synchronized do
+          threads << thread
+        end
+      end
+      lock.synchronized do
+        threads.each{|t| t.join }
       end
     end
-    threads.each{|t| t.join }
+  else
+    def test_runs_multithreaded
+      threads = []
+      mute = Mutex.new
+      1000.times do |t|
+        thread = Thread.new do
+                   parser = Radius::Parser.new(@context, :tag_prefix => 'r')
+                   parser.context.globals.thread_id = Thread.current.object_id
+                   expected = "#{Thread.current.object_id} / "+
+                              "#{parser.context.globals.object_id}"
+                   actual = parser.parse('<r:thread />')
+                   assert_equal expected, actual
+                 end
+        mute.synchronize do
+          threads << thread
+        end
+      end
+      mute.synchronize do
+        threads.each{|t| t.join }
+      end
+    end
   end
 
 end
