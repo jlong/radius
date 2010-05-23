@@ -1,7 +1,7 @@
 
 // line 1 "JavaScanner.rl"
 
-// line 87 "JavaScanner.rl"
+// line 80 "JavaScanner.rl"
 
 
 package radius.parser;
@@ -30,11 +30,9 @@ public class JavaScanner {
   }
 
   void pass_through(LinkedList<Tag> rv, String str) {
-    System.out.println("  PASSTHROUGH: " + str);
     if (rv.size() > 0) {
       Tag last = rv.getLast();
       if (last.passthrough) {
-        System.out.println("    APPEND TO " + last.name);
         last.name += str;
         return;
       }
@@ -44,18 +42,18 @@ public class JavaScanner {
   }
 
   
-// line 48 "JavaScanner.java"
+// line 46 "JavaScanner.java"
 private static byte[] init__parser_actions_0()
 {
 	return new byte [] {
-	    0,    1,    0,    1,    1,    1,    2,    1,    3,    1,    4,    1,
-	    5,    1,    6,    1,    7,    1,    8,    1,    9,    1,   13,    1,
-	   14,    1,   18,    1,   20,    1,   21,    1,   22,    2,    4,    5,
-	    2,    5,    6,    2,    8,    4,    2,    8,    9,    2,    9,    8,
-	    2,   10,   19,    2,   11,   19,    2,   12,   19,    2,   15,   16,
-	    2,   15,   17,    3,    4,    5,    6,    3,    8,    4,    5,    3,
-	   15,    5,   16,    4,    8,    4,    5,    6,    4,   15,    4,    5,
-	   16,    5,   15,    8,    4,    5,   16
+	    0,    1,    0,    1,    3,    1,    4,    1,    5,    1,    6,    1,
+	    7,    1,    8,    1,    9,    1,   10,    1,   14,    1,   15,    1,
+	   19,    1,   21,    1,   22,    1,   23,    2,    1,    2,    2,    5,
+	    6,    2,    6,    7,    2,    9,    5,    2,    9,   10,    2,   10,
+	    9,    2,   11,   20,    2,   12,   20,    2,   13,   20,    2,   16,
+	   17,    2,   16,   18,    3,    5,    6,    7,    3,    9,    5,    6,
+	    3,   16,    6,   17,    4,    9,    5,    6,    7,    4,   16,    5,
+	    6,   17,    5,   16,    9,    5,    6,   17
 	};
 }
 
@@ -230,17 +228,17 @@ private static final byte _parser_trans_targs[] = init__parser_trans_targs_0();
 private static byte[] init__parser_trans_actions_0()
 {
 	return new byte [] {
-	   29,    0,    3,    5,    7,    0,    7,    7,    0,   13,    0,    0,
-	   31,   15,    0,   15,    0,    0,    0,    0,   17,   42,   17,    0,
-	   19,    0,    9,   63,   33,   33,    0,   36,   11,   11,    0,   19,
-	    9,   63,   33,   80,    0,   36,   11,   71,   15,    0,   15,    0,
-	    0,   19,    0,   39,   75,   67,   85,   57,   17,   45,   42,   17,
-	    0,   19,    0,    0,    9,   63,   33,   80,    0,    0,   36,   11,
-	   71,   15,    0,   15,    0,    0,    0,   19,   42,   19,    9,   63,
-	   33,   80,    0,   36,   11,   71,   15,    0,   15,    0,    0,   19,
-	   19,   39,   75,   67,   85,   57,   17,   39,   75,   67,   85,   17,
-	   57,    1,    0,    3,    5,    7,    0,    7,    0,    0,    0,   25,
-	   60,   27,    1,    0,   51,   48,   54
+	   27,    0,   31,    3,    5,    0,    5,    5,    0,   11,    0,    0,
+	   29,   13,    0,   13,    0,    0,    0,    0,   15,   43,   15,    0,
+	   17,    0,    7,   64,   34,   34,    0,   37,    9,    9,    0,   17,
+	    7,   64,   34,   81,    0,   37,    9,   72,   13,    0,   13,    0,
+	    0,   17,    0,   40,   76,   68,   86,   58,   15,   46,   43,   15,
+	    0,   17,    0,    0,    7,   64,   34,   81,    0,    0,   37,    9,
+	   72,   13,    0,   13,    0,    0,    0,   17,   43,   17,    7,   64,
+	   34,   81,    0,   37,    9,   72,   13,    0,   13,    0,    0,   17,
+	   17,   40,   76,   68,   86,   58,   15,   40,   76,   68,   86,   15,
+	   58,    1,    0,   31,    3,    5,    0,    5,    0,    0,    0,   23,
+	   61,   25,    1,    0,   52,   49,   55
 	};
 }
 
@@ -254,7 +252,7 @@ private static byte[] init__parser_to_state_actions_0()
 	    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
 	    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
 	    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-	   21,   21,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
+	   19,   19,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 	};
 }
 
@@ -268,7 +266,7 @@ private static byte[] init__parser_from_state_actions_0()
 	    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
 	    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
 	    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0,
-	    0,   23,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
+	    0,   21,    0,    0,    0,    0,    0,    0,    0,    0,    0,    0
 	};
 }
 
@@ -297,29 +295,27 @@ static final int parser_en_Closeout = 48;
 static final int parser_en_main = 49;
 
 
-// line 129 "JavaScanner.rl"
+// line 120 "JavaScanner.rl"
 
-  public LinkedList<Tag> operate(String prefix, String input) {
+  public LinkedList<Tag> operate(String tag_prefix, String input) {
     char[] data = input.toCharArray();
     Tag tag;
     String disposable_string;
-    String prematch = "";
 
     String name = "";
+    String prefix = "";
     Flavor flavor = Flavor.TASTELESS;
 
-    int tagstart;
+    int tagstart = 0;
     int mark_pfx = 0;
     int mark_stg = 0;
     int mark_attr = 0;
-    int prematch_end;
     int mark_nat = 0;
     int mark_vat = 0;
 
     HashMap attributes = new HashMap();
     String nat = "";
     String vat = "";
-    int cursor = 0;
 
     int cs;
     int p = 0;
@@ -333,7 +329,7 @@ static final int parser_en_main = 49;
     char[] remainder = data;
 
     
-// line 337 "JavaScanner.java"
+// line 333 "JavaScanner.java"
 	{
 	cs = parser_start;
 	ts = -1;
@@ -341,9 +337,9 @@ static final int parser_en_main = 49;
 	act = 0;
 	}
 
-// line 164 "JavaScanner.rl"
+// line 153 "JavaScanner.rl"
     
-// line 347 "JavaScanner.java"
+// line 343 "JavaScanner.java"
 	{
 	int _klen;
 	int _trans = 0;
@@ -368,11 +364,11 @@ case 1:
 	_nacts = (int) _parser_actions[_acts++];
 	while ( _nacts-- > 0 ) {
 		switch ( _parser_actions[_acts++] ) {
-	case 14:
+	case 15:
 // line 1 "NONE"
 	{ts = p;}
 	break;
-// line 376 "JavaScanner.java"
+// line 372 "JavaScanner.java"
 		}
 	}
 
@@ -443,117 +439,117 @@ case 3:
 	case 1:
 // line 5 "JavaScanner.rl"
 	{
-    disposable_string = input.substring(mark_pfx, p-1);
-	  if (disposable_string != prefix) {
-      // pass the text through
-      pass_through(return_value, disposable_string);
-    }
+    prefix = input.substring(mark_pfx, p);
 	}
 	break;
 	case 2:
-// line 12 "JavaScanner.rl"
-	{ mark_stg = p; }
+// line 8 "JavaScanner.rl"
+	{
+	  if ( !prefix.equals(tag_prefix) ) {
+      // have to manually add ':' / Sep
+      // pass the text through & reset state
+      pass_through(return_value, input.substring(tagstart, p) + ":");
+      {cs = 49; _goto_targ = 2; if (true) continue _goto;}
+    }
+  }
 	break;
 	case 3:
-// line 13 "JavaScanner.rl"
-	{ name = input.substring(mark_stg, p); }
+// line 17 "JavaScanner.rl"
+	{ mark_stg = p; }
 	break;
 	case 4:
-// line 14 "JavaScanner.rl"
-	{ mark_attr = p; }
+// line 18 "JavaScanner.rl"
+	{ name = input.substring(mark_stg, p); }
 	break;
 	case 5:
-// line 15 "JavaScanner.rl"
-	{
-    System.out.println("ATTR: " + nat + ", " + vat);
-    attributes.put(nat, vat);
-    System.out.println("SIZE OF KEYS NOW: " + attributes.keySet().size());
-	}
+// line 19 "JavaScanner.rl"
+	{ mark_attr = p; }
 	break;
 	case 6:
-// line 28 "JavaScanner.rl"
-	{ mark_nat = p; }
+// line 20 "JavaScanner.rl"
+	{
+    attributes.put(nat, vat);
+	}
 	break;
 	case 7:
-// line 29 "JavaScanner.rl"
-	{ nat = input.substring(mark_nat, p); }
+// line 24 "JavaScanner.rl"
+	{ mark_nat = p; }
 	break;
 	case 8:
-// line 30 "JavaScanner.rl"
-	{ mark_vat = p; }
+// line 25 "JavaScanner.rl"
+	{ nat = input.substring(mark_nat, p); }
 	break;
 	case 9:
-// line 31 "JavaScanner.rl"
-	{ vat = input.substring(mark_vat, p); }
+// line 26 "JavaScanner.rl"
+	{ mark_vat = p; }
 	break;
 	case 10:
-// line 33 "JavaScanner.rl"
-	{ flavor = Flavor.OPEN; }
+// line 27 "JavaScanner.rl"
+	{ vat = input.substring(mark_vat, p); }
 	break;
 	case 11:
-// line 34 "JavaScanner.rl"
-	{ flavor = Flavor.SELF; }
+// line 29 "JavaScanner.rl"
+	{ flavor = Flavor.OPEN; }
 	break;
 	case 12:
-// line 35 "JavaScanner.rl"
+// line 30 "JavaScanner.rl"
+	{ flavor = Flavor.SELF; }
+	break;
+	case 13:
+// line 31 "JavaScanner.rl"
 	{ flavor = Flavor.CLOSE; }
 	break;
-	case 15:
+	case 16:
 // line 1 "NONE"
 	{te = p+1;}
 	break;
-	case 16:
-// line 72 "JavaScanner.rl"
+	case 17:
+// line 67 "JavaScanner.rl"
 	{act = 1;}
 	break;
-	case 17:
-// line 81 "JavaScanner.rl"
+	case 18:
+// line 75 "JavaScanner.rl"
 	{act = 2;}
 	break;
-	case 18:
-// line 81 "JavaScanner.rl"
+	case 19:
+// line 75 "JavaScanner.rl"
 	{te = p+1;{
-      System.out.println("any: " + p + ", " + input.substring(p, p + 1));
       pass_through(return_value, input.substring(p, p + 1));
-	    tagstart = p;
+	    tagstart = p + 1;
 	  }}
 	break;
-	case 19:
-// line 72 "JavaScanner.rl"
+	case 20:
+// line 67 "JavaScanner.rl"
 	{te = p;p--;{
-      System.out.println("SomeTag: " + prefix + ", " + name);
       tag = new Tag(prefix, name, flavor, attributes, false);
-	    prefix = null;
+	    prefix = "";
 	    name = "";
 	    flavor = Flavor.TASTELESS;
 	    attributes = new HashMap();
 	    return_value.add(tag);
 	  }}
 	break;
-	case 20:
-// line 81 "JavaScanner.rl"
-	{te = p;p--;{
-      System.out.println("any: " + p + ", " + input.substring(p, p + 1));
-      pass_through(return_value, input.substring(p, p + 1));
-	    tagstart = p;
-	  }}
-	break;
 	case 21:
-// line 81 "JavaScanner.rl"
-	{{p = ((te))-1;}{
-      System.out.println("any: " + p + ", " + input.substring(p, p + 1));
+// line 75 "JavaScanner.rl"
+	{te = p;p--;{
       pass_through(return_value, input.substring(p, p + 1));
-	    tagstart = p;
+	    tagstart = p + 1;
 	  }}
 	break;
 	case 22:
+// line 75 "JavaScanner.rl"
+	{{p = ((te))-1;}{
+      pass_through(return_value, input.substring(p, p + 1));
+	    tagstart = p + 1;
+	  }}
+	break;
+	case 23:
 // line 1 "NONE"
 	{	switch( act ) {
 	case 1:
 	{{p = ((te))-1;}
-      System.out.println("SomeTag: " + prefix + ", " + name);
       tag = new Tag(prefix, name, flavor, attributes, false);
-	    prefix = null;
+	    prefix = "";
 	    name = "";
 	    flavor = Flavor.TASTELESS;
 	    attributes = new HashMap();
@@ -562,15 +558,14 @@ case 3:
 	break;
 	case 2:
 	{{p = ((te))-1;}
-      System.out.println("any: " + p + ", " + input.substring(p, p + 1));
       pass_through(return_value, input.substring(p, p + 1));
-	    tagstart = p;
+	    tagstart = p + 1;
 	  }
 	break;
 	}
 	}
 	break;
-// line 574 "JavaScanner.java"
+// line 569 "JavaScanner.java"
 			}
 		}
 	}
@@ -580,11 +575,11 @@ case 2:
 	_nacts = (int) _parser_actions[_acts++];
 	while ( _nacts-- > 0 ) {
 		switch ( _parser_actions[_acts++] ) {
-	case 13:
+	case 14:
 // line 1 "NONE"
 	{ts = -1;}
 	break;
-// line 588 "JavaScanner.java"
+// line 583 "JavaScanner.java"
 		}
 	}
 
@@ -611,7 +606,7 @@ case 5:
 	break; }
 	}
 
-// line 165 "JavaScanner.rl"
+// line 154 "JavaScanner.rl"
 
     return return_value;
   }

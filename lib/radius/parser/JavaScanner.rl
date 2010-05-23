@@ -3,26 +3,22 @@
 	
 	action _prefix { mark_pfx = p; }
 	action prefix {
-    disposable_string = input.substring(mark_pfx, p-1);
-	  if (disposable_string != prefix) {
-      // pass the text through
-      pass_through(return_value, disposable_string);
-    }
+    prefix = input.substring(mark_pfx, p);
 	}
+  action _check_prefix {
+	  if ( !prefix.equals(tag_prefix) ) {
+      // have to manually add ':' / Sep
+      // pass the text through & reset state
+      pass_through(return_value, input.substring(tagstart, p) + ":");
+      fgoto main;
+    }
+  }
+
 	action _starttag { mark_stg = p; }
 	action starttag { name = input.substring(mark_stg, p); }
 	action _attr { mark_attr = p; }
 	action attr {
-    System.out.println("ATTR: " + nat + ", " + vat);
     attributes.put(nat, vat);
-    System.out.println("SIZE OF KEYS NOW: " + attributes.keySet().size());
-	}
-	
-	action prematch {
-	  prematch_end = p;
-    if (p > 0) {
-      prematch = input.substring(0, p);
-    }
 	}
 	
 	action _nameattr { mark_nat = p; }
@@ -34,11 +30,6 @@
 	action selftag  { flavor = Flavor.SELF; }
 	action closetag { flavor = Flavor.CLOSE; }
 	
-	action stopparse {
-	  cursor = p;
-	}
-	
-	
 	Closeout := empty;
 	
 	# words
@@ -46,8 +37,12 @@
 	NameChar = [\-A-Za-z0-9._:?] ;
 	TagName = NameChar+ >_starttag %starttag;
 	Prefix = PrefixChar+ >_prefix %prefix;
+  Open = "<";
+  Sep = ":" >_check_prefix;
+  End = "/";
+  Close = ">";
 	
-	Name = Prefix ":" TagName;
+	Name = Prefix Sep TagName;
 	
 	NameAttr = NameChar+ >_nameattr %nameattr;
   Q1Char = ( "\\\'" | [^'] ) ;
@@ -58,30 +53,28 @@
   Attr =  NameAttr space* "=" space* ('"' Q2Attr '"' | "'" Q1Attr "'") space* >_attr %attr;
   Attrs = (space+ Attr* | empty);
   
-  CloseTrailer = "/>" %selftag;
-  OpenTrailer = ">" %opentag;
+  CloseTrailer = End Close %selftag;
+  OpenTrailer = Close %opentag;
   
   Trailer = (OpenTrailer | CloseTrailer);
   
 	OpenOrSelfTag = Name Attrs? Trailer;
-	CloseTag = "/" Name space* ">" %closetag;
+	CloseTag = End Name space* Close %closetag;
 	
-	SomeTag = '<' (OpenOrSelfTag | CloseTag);
+	SomeTag = Open (OpenOrSelfTag | CloseTag);
 	
 	main := |*
 	  SomeTag => {
-      System.out.println("SomeTag: " + prefix + ", " + name);
       tag = new Tag(prefix, name, flavor, attributes, false);
-	    prefix = null;
+	    prefix = "";
 	    name = "";
 	    flavor = Flavor.TASTELESS;
 	    attributes = new HashMap();
 	    return_value.add(tag);
 	  };
 	  any => {
-      System.out.println("any: " + p + ", " + input.substring(p, p + 1));
       pass_through(return_value, input.substring(p, p + 1));
-	    tagstart = p;
+	    tagstart = p + 1;
 	  };
 	*|;
 }%%
@@ -112,11 +105,9 @@ public class JavaScanner {
   }
 
   void pass_through(LinkedList<Tag> rv, String str) {
-    System.out.println("  PASSTHROUGH: " + str);
     if (rv.size() > 0) {
       Tag last = rv.getLast();
       if (last.passthrough) {
-        System.out.println("    APPEND TO " + last.name);
         last.name += str;
         return;
       }
@@ -127,27 +118,25 @@ public class JavaScanner {
 
   %% write data;
 
-  public LinkedList<Tag> operate(String prefix, String input) {
+  public LinkedList<Tag> operate(String tag_prefix, String input) {
     char[] data = input.toCharArray();
     Tag tag;
     String disposable_string;
-    String prematch = "";
 
     String name = "";
+    String prefix = "";
     Flavor flavor = Flavor.TASTELESS;
 
-    int tagstart;
+    int tagstart = 0;
     int mark_pfx = 0;
     int mark_stg = 0;
     int mark_attr = 0;
-    int prematch_end;
     int mark_nat = 0;
     int mark_vat = 0;
 
     HashMap attributes = new HashMap();
     String nat = "";
     String vat = "";
-    int cursor = 0;
 
     int cs;
     int p = 0;
