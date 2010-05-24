@@ -23,7 +23,7 @@ module Radius
       options = Utility.symbolize_keys(options)
       self.context = context ? context.dup : Context.new
       self.tag_prefix = options[:tag_prefix] || 'radius'
-      self.scanner = options[:scanner] || Radius::Scanner.new
+      self.scanner = options[:scanner] || default_scanner
     end
     
     # Parses string for tags, expands them, and returns the result.
@@ -63,6 +63,17 @@ module Radius
         end
       end
       raise MissingEndTagError.new(@stack.last.name, @stack) if @stack.length != 1
+    end
+
+    def default_scanner
+      if RUBY_PLATFORM == 'java'
+        require 'java'
+        require 'radius/parser/java_scanner.jar'
+        ::Radius.send(:include_package, 'radius.parser')
+        Radius::JavaScanner.new(JRuby.runtime)
+      else
+        Radius::Scanner.new
+      end
     end
   end
 end

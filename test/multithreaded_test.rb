@@ -13,17 +13,13 @@ class MultithreadTest < Test::Unit::TestCase
   end
 
   if RUBY_PLATFORM == 'java'
-    require 'radius/parser/jscanner'
+    require 'java'
     def test_runs_multithreaded
       lock = java.lang.String.new("lock")
       threads = []
       1000.times do |t|
         thread = Thread.new do
-                   parser = Radius::Parser.new(
-                              @context,
-                              :tag_prefix => 'r',
-                              :scanner => Radius::JScanner.new
-                            )
+                   parser = Radius::Parser.new(@context, :tag_prefix => 'r')
                    parser.context.globals.thread_id = Thread.current.object_id
                    expected = "#{Thread.current.object_id} / "+
                               "#{parser.context.globals.object_id}"

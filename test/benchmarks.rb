@@ -22,16 +22,11 @@ amount = 1000
 
 Benchmark.bmbm do |bm|
   bm.report('vanilla') do
-    scanner = Radius::Scanner.new
+    scanner = Radius::Scanner.new(:scanner => Radius::Scanner)
     amount.times { scanner.operate('r', document) }
   end
 
   if RUBY_PLATFORM == 'java'
-    bm.report('JScanner') do
-      scanner = Radius::JScanner.new
-      amount.times { scanner.operate('r', document) }
-    end
-
     bm.report('JavaScanner') do
       scanner = Radius::JavaScanner.new(JRuby.runtime)
       amount.times { scanner.operate('r', document) }

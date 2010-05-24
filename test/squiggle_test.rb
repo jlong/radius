@@ -10,7 +10,7 @@ class RadiusSquiggleTest < Test::Unit::TestCase
   end
 
   def test_sane_scanner_default
-    assert_kind_of Radius::Scanner, Radius::Parser.new.scanner
+    assert !Radius::Parser.new.scanner.is_a?(Radius::SquiggleScanner)
   end
 
   def test_initialize_with_params
