@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), 'test_helper')
+require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 require 'radius/parser/squiggle_scanner'
 
 class RadiusSquiggleTest < Test::Unit::TestCase
