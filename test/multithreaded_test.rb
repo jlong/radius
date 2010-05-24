@@ -14,6 +14,8 @@ class MultithreadTest < Test::Unit::TestCase
 
   if RUBY_PLATFORM == 'java'
     require 'java'
+    # call once before the thread to keep from using hidden require in a thread
+    Radius::Parser.new
     def test_runs_multithreaded
       lock = java.lang.String.new("lock")
       threads = []
