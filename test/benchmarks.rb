@@ -1,7 +1,10 @@
 $: << File.join(File.dirname(__FILE__), '..', 'lib')
 require 'radius'
-require 'java'
-require 'radius/parser/jscanner'
+
+if RUBY_PLATFORM == 'java'
+  require 'java'
+  require 'radius/parser/jscanner'
+end
 
 require 'benchmark'
 
@@ -23,14 +26,15 @@ Benchmark.bmbm do |bm|
     amount.times { scanner.operate('r', document) }
   end
 
-  bm.report('JScanner') do
-    scanner = Radius::JScanner.new
-    amount.times { scanner.operate('r', document) }
-  end
+  if RUBY_PLATFORM == 'java'
+    bm.report('JScanner') do
+      scanner = Radius::JScanner.new
+      amount.times { scanner.operate('r', document) }
+    end
 
-  bm.report('JavaScanner') do
-    scanner = Radius::JavaScanner.new
-    amount.times { scanner.operate('r', document) }
+    bm.report('JavaScanner') do
+      scanner = Radius::JavaScanner.new
+      amount.times { scanner.operate('r', document) }
+    end
   end
 end
-
