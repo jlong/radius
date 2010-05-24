@@ -9,7 +9,8 @@
 	  if ( !prefix.equals(tag_prefix) ) {
       // have to manually add ':' / Sep
       // pass the text through & reset state
-      pass_through(return_value, input.substring(tagstart, p) + ":");
+      pass_through(input.substring(tagstart, p) + ":");
+      prefix = "";
       fgoto main;
     }
   }
@@ -18,7 +19,11 @@
 	action starttag { name = input.substring(mark_stg, p); }
 	action _attr { mark_attr = p; }
 	action attr {
-    attributes.put(nat, vat);
+    attributes.op_aset(
+      runtime.getCurrentContext(),
+      RubyString.newString(runtime, nat),
+      RubyString.newString(runtime, vat)
+    );
 	}
 	
 	action _nameattr { mark_nat = p; }
@@ -26,9 +31,9 @@
 	action _valattr { mark_vat = p; }
 	action valattr { vat = input.substring(mark_vat, p); }
 	
-	action opentag  { flavor = Flavor.OPEN; }
-	action selftag  { flavor = Flavor.SELF; }
-	action closetag { flavor = Flavor.CLOSE; }
+	action opentag  { flavor = RubySymbol.newSymbol(runtime, "open".intern()); }
+	action selftag  { flavor = RubySymbol.newSymbol(runtime, "self".intern()); }
+	action closetag { flavor = RubySymbol.newSymbol(runtime, "close".intern()); }
 	
 	Closeout := empty;
 	
@@ -65,15 +70,14 @@
 	
 	main := |*
 	  SomeTag => {
-      tag = new Tag(prefix, name, flavor, attributes, false);
+      tag(prefix, name, attributes, flavor);
 	    prefix = "";
 	    name = "";
-	    flavor = Flavor.TASTELESS;
-	    attributes = new HashMap();
-	    return_value.add(tag);
+	    attributes = RubyHash.newHash(runtime);
+	    flavor = RubySymbol.newSymbol(runtime, "tasteless".intern());
 	  };
 	  any => {
-      pass_through(return_value, input.substring(p, p + 1));
+      pass_through(input.substring(p, p + 1));
 	    tagstart = p + 1;
 	  };
 	*|;
@@ -83,49 +87,68 @@ package radius.parser;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import org.jruby.Ruby; // runtime
+import org.jruby.RubyObject;
+import org.jruby.runtime.builtin.IRubyObject;
+import org.jruby.RubyArray;
+import org.jruby.RubyString;
+import org.jruby.RubyHash;
+import org.jruby.RubySymbol;
 
 public class JavaScanner {
 
-  public enum Flavor { TASTELESS, OPEN, SELF, CLOSE }
+  Ruby runtime = null;
+  RubyArray rv = null;
 
-  public class Tag {
-    public String prefix;
-    public String name;
-    public Flavor flavor;
-    public HashMap attributes;
-    public boolean passthrough; // name == stream text, not a radius tag
-
-    public Tag(String prefix, String name, Flavor flavor, HashMap attributes, boolean passthrough) {
-      this.prefix = prefix;
-      this.name = name;
-      this.flavor = flavor;
-      this.attributes = attributes;
-      this.passthrough = passthrough;
+  void pass_through(String str) {
+    RubyObject last = ((RubyObject)rv.last());
+    if ( rv.size() > 0 &&  last != null && (last instanceof RubyString) ){
+      // XXX concat changes for ruby 1.9
+      ((RubyString) last).concat(RubyString.newString(runtime, str));
+    } else {
+      rv.append(RubyString.newString(runtime, str));
     }
   }
 
-  void pass_through(LinkedList<Tag> rv, String str) {
-    if (rv.size() > 0) {
-      Tag last = rv.getLast();
-      if (last.passthrough) {
-        last.name += str;
-        return;
-      }
-    }
-    Tag t = new Tag((String)null, str, Flavor.TASTELESS, (HashMap)null, true);
-    rv.add(t);
+  void tag(String prefix, String name, RubyHash attr, RubySymbol flavor) {
+    RubyHash tag = RubyHash.newHash(runtime);
+    tag.op_aset(
+      runtime.getCurrentContext(),
+      RubySymbol.newSymbol(runtime, "prefix"),
+      RubyString.newString(runtime, prefix)
+    );
+    tag.op_aset(
+      runtime.getCurrentContext(),
+      RubySymbol.newSymbol(runtime, "name"),
+      RubyString.newString(runtime, name)
+    );
+    tag.op_aset(
+      runtime.getCurrentContext(),
+      RubySymbol.newSymbol(runtime, "attrs"),
+      attr
+    );
+    tag.op_aset(
+      runtime.getCurrentContext(),
+      RubySymbol.newSymbol(runtime, "flavor"),
+      flavor
+    );
+    rv.append(tag);
+  }
+
+  public JavaScanner(Ruby runtime) {
+    this.runtime = runtime;
   }
 
   %% write data;
 
-  public LinkedList<Tag> operate(String tag_prefix, String input) {
+  public RubyArray operate(String tag_prefix, String input) {
     char[] data = input.toCharArray();
-    Tag tag;
     String disposable_string;
 
     String name = "";
     String prefix = "";
-    Flavor flavor = Flavor.TASTELESS;
+    RubySymbol flavor = RubySymbol.newSymbol(runtime, "tasteless".intern());
+    RubyHash attributes = RubyHash.newHash(runtime);
 
     int tagstart = 0;
     int mark_pfx = 0;
@@ -134,7 +157,6 @@ public class JavaScanner {
     int mark_nat = 0;
     int mark_vat = 0;
 
-    HashMap attributes = new HashMap();
     String nat = "";
     String vat = "";
 
@@ -146,12 +168,12 @@ public class JavaScanner {
     int ts;
     int te;
 
-    LinkedList<Tag> return_value = new LinkedList<Tag>();
+    rv = RubyArray.newArray(runtime);
     char[] remainder = data;
 
     %% write init;
     %% write exec;
 
-    return return_value;
+    return rv;
   }
 }

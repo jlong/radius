@@ -1,48 +1,67 @@
 
 // line 1 "JavaScanner.rl"
 
-// line 80 "JavaScanner.rl"
+// line 84 "JavaScanner.rl"
 
 
 package radius.parser;
 
 import java.util.HashMap;
 import java.util.LinkedList;
+import org.jruby.Ruby; // runtime
+import org.jruby.RubyObject;
+import org.jruby.runtime.builtin.IRubyObject;
+import org.jruby.RubyArray;
+import org.jruby.RubyString;
+import org.jruby.RubyHash;
+import org.jruby.RubySymbol;
 
 public class JavaScanner {
 
-  public enum Flavor { TASTELESS, OPEN, SELF, CLOSE }
+  Ruby runtime = null;
+  RubyArray rv = null;
 
-  public class Tag {
-    public String prefix;
-    public String name;
-    public Flavor flavor;
-    public HashMap attributes;
-    public boolean passthrough; // name == stream text, not a radius tag
-
-    public Tag(String prefix, String name, Flavor flavor, HashMap attributes, boolean passthrough) {
-      this.prefix = prefix;
-      this.name = name;
-      this.flavor = flavor;
-      this.attributes = attributes;
-      this.passthrough = passthrough;
+  void pass_through(String str) {
+    RubyObject last = ((RubyObject)rv.last());
+    if ( rv.size() > 0 &&  last != null && (last instanceof RubyString) ){
+      // XXX concat changes for ruby 1.9
+      ((RubyString) last).concat(RubyString.newString(runtime, str));
+    } else {
+      rv.append(RubyString.newString(runtime, str));
     }
   }
 
-  void pass_through(LinkedList<Tag> rv, String str) {
-    if (rv.size() > 0) {
-      Tag last = rv.getLast();
-      if (last.passthrough) {
-        last.name += str;
-        return;
-      }
-    }
-    Tag t = new Tag((String)null, str, Flavor.TASTELESS, (HashMap)null, true);
-    rv.add(t);
+  void tag(String prefix, String name, RubyHash attr, RubySymbol flavor) {
+    RubyHash tag = RubyHash.newHash(runtime);
+    tag.op_aset(
+      runtime.getCurrentContext(),
+      RubySymbol.newSymbol(runtime, "prefix"),
+      RubyString.newString(runtime, prefix)
+    );
+    tag.op_aset(
+      runtime.getCurrentContext(),
+      RubySymbol.newSymbol(runtime, "name"),
+      RubyString.newString(runtime, name)
+    );
+    tag.op_aset(
+      runtime.getCurrentContext(),
+      RubySymbol.newSymbol(runtime, "attrs"),
+      attr
+    );
+    tag.op_aset(
+      runtime.getCurrentContext(),
+      RubySymbol.newSymbol(runtime, "flavor"),
+      flavor
+    );
+    rv.append(tag);
+  }
+
+  public JavaScanner(Ruby runtime) {
+    this.runtime = runtime;
   }
 
   
-// line 46 "JavaScanner.java"
+// line 65 "JavaScanner.java"
 private static byte[] init__parser_actions_0()
 {
 	return new byte [] {
@@ -295,16 +314,16 @@ static final int parser_en_Closeout = 48;
 static final int parser_en_main = 49;
 
 
-// line 120 "JavaScanner.rl"
+// line 143 "JavaScanner.rl"
 
-  public LinkedList<Tag> operate(String tag_prefix, String input) {
+  public RubyArray operate(String tag_prefix, String input) {
     char[] data = input.toCharArray();
-    Tag tag;
     String disposable_string;
 
     String name = "";
     String prefix = "";
-    Flavor flavor = Flavor.TASTELESS;
+    RubySymbol flavor = RubySymbol.newSymbol(runtime, "tasteless".intern());
+    RubyHash attributes = RubyHash.newHash(runtime);
 
     int tagstart = 0;
     int mark_pfx = 0;
@@ -313,7 +332,6 @@ static final int parser_en_main = 49;
     int mark_nat = 0;
     int mark_vat = 0;
 
-    HashMap attributes = new HashMap();
     String nat = "";
     String vat = "";
 
@@ -325,11 +343,11 @@ static final int parser_en_main = 49;
     int ts;
     int te;
 
-    LinkedList<Tag> return_value = new LinkedList<Tag>();
+    rv = RubyArray.newArray(runtime);
     char[] remainder = data;
 
     
-// line 333 "JavaScanner.java"
+// line 351 "JavaScanner.java"
 	{
 	cs = parser_start;
 	ts = -1;
@@ -337,9 +355,9 @@ static final int parser_en_main = 49;
 	act = 0;
 	}
 
-// line 153 "JavaScanner.rl"
+// line 175 "JavaScanner.rl"
     
-// line 343 "JavaScanner.java"
+// line 361 "JavaScanner.java"
 	{
 	int _klen;
 	int _trans = 0;
@@ -368,7 +386,7 @@ case 1:
 // line 1 "NONE"
 	{ts = p;}
 	break;
-// line 372 "JavaScanner.java"
+// line 390 "JavaScanner.java"
 		}
 	}
 
@@ -448,98 +466,102 @@ case 3:
 	  if ( !prefix.equals(tag_prefix) ) {
       // have to manually add ':' / Sep
       // pass the text through & reset state
-      pass_through(return_value, input.substring(tagstart, p) + ":");
+      pass_through(input.substring(tagstart, p) + ":");
+      prefix = "";
       {cs = 49; _goto_targ = 2; if (true) continue _goto;}
     }
   }
 	break;
 	case 3:
-// line 17 "JavaScanner.rl"
+// line 18 "JavaScanner.rl"
 	{ mark_stg = p; }
 	break;
 	case 4:
-// line 18 "JavaScanner.rl"
+// line 19 "JavaScanner.rl"
 	{ name = input.substring(mark_stg, p); }
 	break;
 	case 5:
-// line 19 "JavaScanner.rl"
+// line 20 "JavaScanner.rl"
 	{ mark_attr = p; }
 	break;
 	case 6:
-// line 20 "JavaScanner.rl"
+// line 21 "JavaScanner.rl"
 	{
-    attributes.put(nat, vat);
+    attributes.op_aset(
+      runtime.getCurrentContext(),
+      RubyString.newString(runtime, nat),
+      RubyString.newString(runtime, vat)
+    );
 	}
 	break;
 	case 7:
-// line 24 "JavaScanner.rl"
+// line 29 "JavaScanner.rl"
 	{ mark_nat = p; }
 	break;
 	case 8:
-// line 25 "JavaScanner.rl"
+// line 30 "JavaScanner.rl"
 	{ nat = input.substring(mark_nat, p); }
 	break;
 	case 9:
-// line 26 "JavaScanner.rl"
+// line 31 "JavaScanner.rl"
 	{ mark_vat = p; }
 	break;
 	case 10:
-// line 27 "JavaScanner.rl"
+// line 32 "JavaScanner.rl"
 	{ vat = input.substring(mark_vat, p); }
 	break;
 	case 11:
-// line 29 "JavaScanner.rl"
-	{ flavor = Flavor.OPEN; }
+// line 34 "JavaScanner.rl"
+	{ flavor = RubySymbol.newSymbol(runtime, "open".intern()); }
 	break;
 	case 12:
-// line 30 "JavaScanner.rl"
-	{ flavor = Flavor.SELF; }
+// line 35 "JavaScanner.rl"
+	{ flavor = RubySymbol.newSymbol(runtime, "self".intern()); }
 	break;
 	case 13:
-// line 31 "JavaScanner.rl"
-	{ flavor = Flavor.CLOSE; }
+// line 36 "JavaScanner.rl"
+	{ flavor = RubySymbol.newSymbol(runtime, "close".intern()); }
 	break;
 	case 16:
 // line 1 "NONE"
 	{te = p+1;}
 	break;
 	case 17:
-// line 67 "JavaScanner.rl"
+// line 72 "JavaScanner.rl"
 	{act = 1;}
 	break;
 	case 18:
-// line 75 "JavaScanner.rl"
+// line 79 "JavaScanner.rl"
 	{act = 2;}
 	break;
 	case 19:
-// line 75 "JavaScanner.rl"
+// line 79 "JavaScanner.rl"
 	{te = p+1;{
-      pass_through(return_value, input.substring(p, p + 1));
+      pass_through(input.substring(p, p + 1));
 	    tagstart = p + 1;
 	  }}
 	break;
 	case 20:
-// line 67 "JavaScanner.rl"
+// line 72 "JavaScanner.rl"
 	{te = p;p--;{
-      tag = new Tag(prefix, name, flavor, attributes, false);
+      tag(prefix, name, attributes, flavor);
 	    prefix = "";
 	    name = "";
-	    flavor = Flavor.TASTELESS;
-	    attributes = new HashMap();
-	    return_value.add(tag);
+	    attributes = RubyHash.newHash(runtime);
+	    flavor = RubySymbol.newSymbol(runtime, "tasteless".intern());
 	  }}
 	break;
 	case 21:
-// line 75 "JavaScanner.rl"
+// line 79 "JavaScanner.rl"
 	{te = p;p--;{
-      pass_through(return_value, input.substring(p, p + 1));
+      pass_through(input.substring(p, p + 1));
 	    tagstart = p + 1;
 	  }}
 	break;
 	case 22:
-// line 75 "JavaScanner.rl"
+// line 79 "JavaScanner.rl"
 	{{p = ((te))-1;}{
-      pass_through(return_value, input.substring(p, p + 1));
+      pass_through(input.substring(p, p + 1));
 	    tagstart = p + 1;
 	  }}
 	break;
@@ -548,24 +570,23 @@ case 3:
 	{	switch( act ) {
 	case 1:
 	{{p = ((te))-1;}
-      tag = new Tag(prefix, name, flavor, attributes, false);
+      tag(prefix, name, attributes, flavor);
 	    prefix = "";
 	    name = "";
-	    flavor = Flavor.TASTELESS;
-	    attributes = new HashMap();
-	    return_value.add(tag);
+	    attributes = RubyHash.newHash(runtime);
+	    flavor = RubySymbol.newSymbol(runtime, "tasteless".intern());
 	  }
 	break;
 	case 2:
 	{{p = ((te))-1;}
-      pass_through(return_value, input.substring(p, p + 1));
+      pass_through(input.substring(p, p + 1));
 	    tagstart = p + 1;
 	  }
 	break;
 	}
 	}
 	break;
-// line 569 "JavaScanner.java"
+// line 590 "JavaScanner.java"
 			}
 		}
 	}
@@ -579,7 +600,7 @@ case 2:
 // line 1 "NONE"
 	{ts = -1;}
 	break;
-// line 583 "JavaScanner.java"
+// line 604 "JavaScanner.java"
 		}
 	}
 
@@ -606,8 +627,8 @@ case 5:
 	break; }
 	}
 
-// line 154 "JavaScanner.rl"
+// line 176 "JavaScanner.rl"
 
-    return return_value;
+    return rv;
   }
 }

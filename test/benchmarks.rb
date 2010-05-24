@@ -33,7 +33,7 @@ Benchmark.bmbm do |bm|
     end
 
     bm.report('JavaScanner') do
-      scanner = Radius::JavaScanner.new
+      scanner = Radius::JavaScanner.new(JRuby.runtime)
       amount.times { scanner.operate('r', document) }
     end
   end

@@ -35,7 +35,8 @@ namespace :scan do
   desc 'turn the JavaScanner.java file into a java class file'
   file 'lib/radius/parser/JavaScanner.class' => 'lib/radius/parser/JavaScanner.java' do |t|
     cd 'lib' do
-      sh "javac radius/parser/JavaScanner.java"
+      jruby_path = ENV['JRUBY_HOME'] || '/usr/local/jruby/current'
+      sh "javac -cp #{jruby_path}/lib/jruby.jar radius/parser/JavaScanner.java"
     end
   end
 
