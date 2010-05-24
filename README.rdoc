@@ -45,7 +45,7 @@ Output:
 Read the QUICKSTART file to get up and running with Radius.
 
 
-= Requirements
+== Requirements
  
 Radius does not have any external requirements for using the library in your
 own programs.
