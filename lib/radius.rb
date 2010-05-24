@@ -5,6 +5,10 @@ require 'radius/delegating_open_struct'
 require 'radius/tag_binding'
 require 'radius/context'
 require 'radius/parse_tag'
-require 'radius/parser/scan'
+if RUBY_VERSION[0.3] == '1.8'
+  require 'radius/parser/scan'
+else
+  require 'radius/parser/scan_19'
+end
 require 'radius/parser'
 require 'radius/utility'
