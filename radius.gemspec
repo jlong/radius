@@ -37,10 +37,11 @@ Gem::Specification.new do |s|
      "lib/radius/parser/JavaScanner.java",
      "lib/radius/parser/JavaScanner.rl",
      "lib/radius/parser/java_scanner.jar",
-     "lib/radius/parser/scanner.rb",
-     "lib/radius/parser/scanner.rl",
      "lib/radius/parser/squiggle_scanner.rb",
      "lib/radius/parser/squiggle_scanner.rl",
+     "lib/radius/parser/scan.rb",
+     "lib/radius/parser/scan.rl",
+     "lib/radius/parser/scan_19.rb",
      "lib/radius/tag_binding.rb",
      "lib/radius/tag_definitions.rb",
      "lib/radius/utility.rb",
@@ -53,6 +54,7 @@ Gem::Specification.new do |s|
      "test/benchmarks.rb",
      "test/context_test.rb",
      "test/multithreaded_test.rb",
+     "test/ord_string_test.rb",
      "test/parser_test.rb",
      "test/quickstart_test.rb",
      "test/squiggle_test.rb",
@@ -62,10 +64,11 @@ Gem::Specification.new do |s|
   s.homepage = %q{http://github.com/jlong/radius}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.3.6}
+  s.rubygems_version = %q{1.3.7}
   s.summary = %q{A tag-based templating language for Ruby.}
   s.test_files = [
     "test/context_test.rb",
+     "test/ord_string_test.rb",
      "test/parser_test.rb",
      "test/quickstart_test.rb",
      "test/test_helper.rb",
