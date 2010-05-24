@@ -1,6 +1,9 @@
 = Change Log
 
 == edge
+* Support for Rubinius [jlong]
+* Support for Ruby 1.9 [aemadrid]
+* More tests [aemadrid]
 * Fixed issue #5 - problem with other namespace tags [jemmyw]
 * Switched to Jeweler for better gem management [jlong]
 * Allow operation in a threaded environment (parser per-thread, shared context)
@@ -12,7 +15,7 @@
 
 == 0.6.0 (private release)
 * Split radius.rb into multiple files.
-* Port the really hairy regexes from Radius::Parser to a single Ragel machine.
+* Ported the really hairy regexes from Radius::Parser to a single Ragel machine.
 * Added and refactored tests.
 * Refactored Rakefile and other administrativia.
 

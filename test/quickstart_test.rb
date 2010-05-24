@@ -1,4 +1,4 @@
-require File.join(File.dirname(__FILE__), 'test_helper')
+require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
 class QuickstartTest < Test::Unit::TestCase
 
@@ -20,7 +20,7 @@ class QuickstartTest < Test::Unit::TestCase
       RedCloth.new(contents).to_html
     end
     parser = Radius::Parser.new(context)
-    assert_equal "<h1>Hello <b>World</b>!</h1>", parser.parse('<radius:textile>h1. Hello **World**!</radius:textile>')
+    assert_equal "<p>Hello <b>World</b>!</p>", parser.parse('<radius:textile>Hello **World**!</radius:textile>')
   end
   
   def test_nested_example
