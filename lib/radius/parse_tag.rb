@@ -9,7 +9,7 @@ module Radius
     end
 
     def to_s
-      @block.call(self)
+      @block.call(self) if @block
     end
   end
 

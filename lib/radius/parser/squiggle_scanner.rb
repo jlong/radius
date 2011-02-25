@@ -1,3 +1,4 @@
+# coding: utf-8
 
 # line 1 "squiggle_scanner.rl"
 
