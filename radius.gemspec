@@ -8,8 +8,8 @@ Gem::Specification.new do |s|
   s.version = "0.7.0.prerelease"
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
-  s.authors = ["John W. Long (me@johnwlong.com)", "David Chelimsky (dchelimsky@gmail.com)", "Bryce Kerley (bkerley@brycekerley.net)"]
-  s.date = %q{2011-06-12}
+  s.authors = [%q{John W. Long (me@johnwlong.com)}, %q{David Chelimsky (dchelimsky@gmail.com)}, %q{Bryce Kerley (bkerley@brycekerley.net)}]
+  s.date = %q{2011-06-13}
   s.description = %q{Radius is a powerful tag-based template language for Ruby inspired by the template languages used in MovableType and TextPattern. It uses tags similar to XML, but can be used to generate any form of plain text (HTML, e-mail, etc...).}
   s.email = %q{me@johnwlong.com}
   s.extra_rdoc_files = [
@@ -62,8 +62,8 @@ Gem::Specification.new do |s|
     "test/utility_test.rb"
   ]
   s.homepage = %q{http://github.com/jlong/radius}
-  s.require_paths = ["lib"]
-  s.rubygems_version = %q{1.6.2}
+  s.require_paths = [%q{lib}]
+  s.rubygems_version = %q{1.8.5}
   s.summary = %q{A tag-based templating language for Ruby.}
 
   if s.respond_to? :specification_version then
