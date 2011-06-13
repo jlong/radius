@@ -1,3 +1,4 @@
+require 'thread'
 require 'test/unit'
 require 'radius'
 
