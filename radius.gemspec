@@ -38,7 +38,6 @@ Gem::Specification.new do |s|
     "lib/radius/parser/JavaScanner.java",
     "lib/radius/parser/JavaScanner.rl",
     "lib/radius/parser/java_scanner.jar",
-    "lib/radius/parser/scanner.dot",
     "lib/radius/parser/scanner.rb",
     "lib/radius/parser/scanner.rl",
     "lib/radius/parser/squiggle_scanner.rb",

@@ -11,7 +11,7 @@ begin
       "David Chelimsky (dchelimsky@gmail.com)",
       "Bryce Kerley (bkerley@brycekerley.net)"
     ]
-    gem.files = FileList["[A-Z]*", "{bin,lib,tasks,test}/**/*"].exclude("tmp").exclude('.rbc')
+    gem.files = FileList["[A-Z]*", "{bin,lib,tasks,test}/**/*"].exclude("tmp",'*.rbc','*.dot')
     gem.extra_rdoc_files = ['README.rdoc', 'QUICKSTART.rdoc', 'LICENSE', 'CHANGELOG']
     gem.add_development_dependency('RedCloth')
     # gem is a Gem::Specification... see http://www.rubygems.org/read/chapter/20 for additional settings
