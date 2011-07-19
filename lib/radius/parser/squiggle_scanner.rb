@@ -1,4 +1,3 @@
-# coding: utf-8
 
 # line 1 "squiggle_scanner.rl"
 
@@ -817,21 +816,20 @@ begin
 	if _goto_level <= _resume
 	case _parser_from_state_actions[cs] 
 	when 24 then
-# line 1 "squiggle_scanner.rl"
+# line 1 "NONE"
 		begin
 ts = p
 		end
-# line 1 "squiggle_scanner.rl"
-# line 825 "squiggle_scanner.rb"
+# line 824 "squiggle_scanner.rb"
 	end
 	_keys = cs << 1
 	_inds = _parser_index_offsets[cs]
 	_slen = _parser_key_spans[cs]
 	_trans = if (   _slen > 0 && 
-			_parser_trans_keys[_keys] <= data[p] && 
-			data[p] <= _parser_trans_keys[_keys + 1] 
+			_parser_trans_keys[_keys] <= data[p].ord && 
+			data[p].ord <= _parser_trans_keys[_keys + 1] 
 		    ) then
-			_parser_indicies[ _inds + data[p] - _parser_trans_keys[_keys] ] 
+			_parser_indicies[ _inds + data[p].ord - _parser_trans_keys[_keys] ] 
 		 else 
 			_parser_indicies[ _inds + _slen ]
 		 end
@@ -844,44 +842,36 @@ ts = p
 # line 12 "squiggle_scanner.rl"
 		begin
  mark_stg = p 		end
-# line 12 "squiggle_scanner.rl"
 	when 3 then
 # line 13 "squiggle_scanner.rl"
 		begin
  @starttag = data[mark_stg..p-1] 		end
-# line 13 "squiggle_scanner.rl"
 	when 10 then
 # line 14 "squiggle_scanner.rl"
 		begin
  mark_attr = p 		end
-# line 14 "squiggle_scanner.rl"
 	when 14 then
 # line 15 "squiggle_scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 15 "squiggle_scanner.rl"
 	when 4 then
 # line 24 "squiggle_scanner.rl"
 		begin
  mark_nat = p 		end
-# line 24 "squiggle_scanner.rl"
 	when 6 then
 # line 25 "squiggle_scanner.rl"
 		begin
  @nat = data[mark_nat..p-1] 		end
-# line 25 "squiggle_scanner.rl"
 	when 7 then
 # line 26 "squiggle_scanner.rl"
 		begin
  mark_vat = p 		end
-# line 26 "squiggle_scanner.rl"
 	when 9 then
 # line 27 "squiggle_scanner.rl"
 		begin
  @vat = data[mark_vat..p-1] 		end
-# line 27 "squiggle_scanner.rl"
 	when 25 then
 # line 80 "squiggle_scanner.rl"
 		begin
@@ -891,7 +881,6 @@ te = p+1
 	    @tagstart = p
 	   end
 		end
-# line 80 "squiggle_scanner.rl"
 	when 27 then
 # line 80 "squiggle_scanner.rl"
 		begin
@@ -901,7 +890,6 @@ p = p - 1; begin
 	    @tagstart = p
 	   end
 		end
-# line 80 "squiggle_scanner.rl"
 	when 1 then
 # line 80 "squiggle_scanner.rl"
 		begin
@@ -911,9 +899,8 @@ p = p - 1; begin
 	    @tagstart = p
 	   end
 		end
-# line 80 "squiggle_scanner.rl"
 	when 5 then
-# line 1 "squiggle_scanner.rl"
+# line 1 "NONE"
 		begin
 	case act
 	when 1 then
@@ -940,61 +927,49 @@ p = p - 1; begin
 	  end
 end 
 			end
-# line 1 "squiggle_scanner.rl"
 	when 12 then
 # line 14 "squiggle_scanner.rl"
 		begin
  mark_attr = p 		end
-# line 14 "squiggle_scanner.rl"
 # line 15 "squiggle_scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 15 "squiggle_scanner.rl"
 	when 13 then
 # line 15 "squiggle_scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 15 "squiggle_scanner.rl"
 # line 24 "squiggle_scanner.rl"
 		begin
  mark_nat = p 		end
-# line 24 "squiggle_scanner.rl"
 	when 17 then
 # line 26 "squiggle_scanner.rl"
 		begin
  mark_vat = p 		end
-# line 26 "squiggle_scanner.rl"
 # line 14 "squiggle_scanner.rl"
 		begin
  mark_attr = p 		end
-# line 14 "squiggle_scanner.rl"
 	when 8 then
 # line 26 "squiggle_scanner.rl"
 		begin
  mark_vat = p 		end
-# line 26 "squiggle_scanner.rl"
 # line 27 "squiggle_scanner.rl"
 		begin
  @vat = data[mark_vat..p-1] 		end
-# line 27 "squiggle_scanner.rl"
 	when 22 then
 # line 27 "squiggle_scanner.rl"
 		begin
  @vat = data[mark_vat..p-1] 		end
-# line 27 "squiggle_scanner.rl"
 # line 26 "squiggle_scanner.rl"
 		begin
  mark_vat = p 		end
-# line 26 "squiggle_scanner.rl"
 	when 29 then
 # line 29 "squiggle_scanner.rl"
 		begin
  @flavor = :open 		end
-# line 29 "squiggle_scanner.rl"
 # line 71 "squiggle_scanner.rl"
 		begin
 te = p
@@ -1013,12 +988,10 @@ p = p - 1; begin
 
 	   end
 		end
-# line 71 "squiggle_scanner.rl"
 	when 28 then
 # line 30 "squiggle_scanner.rl"
 		begin
  @flavor = :self 		end
-# line 30 "squiggle_scanner.rl"
 # line 71 "squiggle_scanner.rl"
 		begin
 te = p
@@ -1037,12 +1010,10 @@ p = p - 1; begin
 
 	   end
 		end
-# line 71 "squiggle_scanner.rl"
 	when 30 then
 # line 31 "squiggle_scanner.rl"
 		begin
  @flavor = :close 		end
-# line 31 "squiggle_scanner.rl"
 # line 71 "squiggle_scanner.rl"
 		begin
 te = p
@@ -1061,148 +1032,120 @@ p = p - 1; begin
 
 	   end
 		end
-# line 71 "squiggle_scanner.rl"
 	when 21 then
-# line 1 "squiggle_scanner.rl"
+# line 1 "NONE"
 		begin
 te = p+1
 		end
-# line 1 "squiggle_scanner.rl"
 # line 71 "squiggle_scanner.rl"
 		begin
 act = 1;		end
-# line 71 "squiggle_scanner.rl"
 	when 26 then
-# line 1 "squiggle_scanner.rl"
+# line 1 "NONE"
 		begin
 te = p+1
 		end
-# line 1 "squiggle_scanner.rl"
 # line 80 "squiggle_scanner.rl"
 		begin
 act = 2;		end
-# line 80 "squiggle_scanner.rl"
 	when 11 then
 # line 14 "squiggle_scanner.rl"
 		begin
  mark_attr = p 		end
-# line 14 "squiggle_scanner.rl"
 # line 15 "squiggle_scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 15 "squiggle_scanner.rl"
 # line 24 "squiggle_scanner.rl"
 		begin
  mark_nat = p 		end
-# line 24 "squiggle_scanner.rl"
 	when 19 then
 # line 26 "squiggle_scanner.rl"
 		begin
  mark_vat = p 		end
-# line 26 "squiggle_scanner.rl"
 # line 14 "squiggle_scanner.rl"
 		begin
  mark_attr = p 		end
-# line 14 "squiggle_scanner.rl"
 # line 15 "squiggle_scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 15 "squiggle_scanner.rl"
 	when 16 then
-# line 1 "squiggle_scanner.rl"
+# line 1 "NONE"
 		begin
 te = p+1
 		end
-# line 1 "squiggle_scanner.rl"
 # line 15 "squiggle_scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 15 "squiggle_scanner.rl"
 # line 71 "squiggle_scanner.rl"
 		begin
 act = 1;		end
-# line 71 "squiggle_scanner.rl"
 	when 18 then
 # line 26 "squiggle_scanner.rl"
 		begin
  mark_vat = p 		end
-# line 26 "squiggle_scanner.rl"
 # line 14 "squiggle_scanner.rl"
 		begin
  mark_attr = p 		end
-# line 14 "squiggle_scanner.rl"
 # line 15 "squiggle_scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 15 "squiggle_scanner.rl"
 # line 24 "squiggle_scanner.rl"
 		begin
  mark_nat = p 		end
-# line 24 "squiggle_scanner.rl"
 	when 15 then
-# line 1 "squiggle_scanner.rl"
+# line 1 "NONE"
 		begin
 te = p+1
 		end
-# line 1 "squiggle_scanner.rl"
 # line 14 "squiggle_scanner.rl"
 		begin
  mark_attr = p 		end
-# line 14 "squiggle_scanner.rl"
 # line 15 "squiggle_scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 15 "squiggle_scanner.rl"
 # line 71 "squiggle_scanner.rl"
 		begin
 act = 1;		end
-# line 71 "squiggle_scanner.rl"
 	when 20 then
-# line 1 "squiggle_scanner.rl"
+# line 1 "NONE"
 		begin
 te = p+1
 		end
-# line 1 "squiggle_scanner.rl"
 # line 26 "squiggle_scanner.rl"
 		begin
  mark_vat = p 		end
-# line 26 "squiggle_scanner.rl"
 # line 14 "squiggle_scanner.rl"
 		begin
  mark_attr = p 		end
-# line 14 "squiggle_scanner.rl"
 # line 15 "squiggle_scanner.rl"
 		begin
 
 	  @attrs[@nat] = @vat 
 			end
-# line 15 "squiggle_scanner.rl"
 # line 71 "squiggle_scanner.rl"
 		begin
 act = 1;		end
-# line 71 "squiggle_scanner.rl"
-# line 1194 "squiggle_scanner.rb"
+# line 1139 "squiggle_scanner.rb"
 	end
 	end
 	end
 	if _goto_level <= _again
 	case _parser_to_state_actions[cs] 
 	when 23 then
-# line 1 "squiggle_scanner.rl"
+# line 1 "NONE"
 		begin
 ts = nil;		end
-# line 1 "squiggle_scanner.rl"
-# line 1205 "squiggle_scanner.rb"
+# line 1149 "squiggle_scanner.rb"
 	end
 
 	if cs == 0
