@@ -1,8 +1,10 @@
 # -*- encoding: utf-8 -*-
 
+$: << (__FILE__ + '/../lib')
+require 'radius'
 Gem::Specification.new do |s|
   s.name = %q{radius}
-  s.version = "0.7.0.prerelease"
+  s.version = ::Radius.version
 
   s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = [%q{John W. Long (me@johnwlong.com)}, %q{David Chelimsky (dchelimsky@gmail.com)}, %q{Bryce Kerley (bkerley@brycekerley.net)}]
