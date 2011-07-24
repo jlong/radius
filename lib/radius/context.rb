@@ -10,7 +10,7 @@ module Radius
     attr_accessor :globals     # :nodoc:
 
     # Creates a new Context object.
-    def initialize(&block)
+    def initialize(*args, &block)
       @definitions = {}
       @tag_binding_stack = []
       @globals = DelegatingOpenStruct.new

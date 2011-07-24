@@ -3,6 +3,14 @@ require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 class RadiusContextTest < Test::Unit::TestCase
   include RadiusTestHelper
   
+  class SuperContext < Radius::Context
+    attr_accessor :name
+    def initialize(name)
+      self.name = name
+      super
+    end
+  end
+  
   def setup
     @context = new_context
   end
@@ -17,6 +25,14 @@ class RadiusContextTest < Test::Unit::TestCase
       c.define_tag('test') { 'just a test' }
     end
     assert_not_equal Hash.new, @context.definitions
+  end
+  
+  def test_initialize_with_arguments
+    @context = SuperContext.new('arg') do |c|
+      assert_kind_of Radius::Context, c
+      c.define_tag('test') { 'just a test' }
+    end
+    assert_equal 'arg', @context.name
   end
   
   def test_with
