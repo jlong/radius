@@ -1,8 +1,5 @@
 module Radius #:nodoc:
   def self.version
-    @version ||= begin
-      filename = File.join(File.dirname(__FILE__), '..', '..', 'VERSION')
-      IO.read(filename).strip
-    end
+    '0.7.0.prerelease2'
   end
 end
