@@ -1,7 +1,6 @@
 # -*- encoding: utf-8 -*-
 
-$: << (__FILE__ + '/../lib')
-require 'radius'
+require File.join(File.dirname(__FILE__), 'lib', 'radius', 'version')
 Gem::Specification.new do |s|
   s.name = %q{radius}
   s.version = ::Radius.version
