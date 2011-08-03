@@ -1,5 +1,6 @@
 module Radius #:nodoc:
+  VERSION = "0.7.0.prerelease3"
   def self.version
-    '0.7.0.prerelease2'
+    VERSION
   end
 end
