@@ -1,6 +1,7 @@
 = Change Log
 
-== edge
+== 0.7
+* Improve performance by switching back to regular expression parsing [jfahrenkrug]
 * Support for Rubinius [jlong]
 * Support for Ruby 1.9 [aemadrid]
 * More tests [aemadrid]
