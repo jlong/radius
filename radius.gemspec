@@ -11,6 +11,7 @@ Gem::Specification.new do |s|
   s.email = %q{me@johnwlong.com}
   s.extra_rdoc_files = [
     "CHANGELOG",
+    "CONTRIBUTORS",
     "LICENSE",
     "QUICKSTART.rdoc",
     "README.rdoc"
