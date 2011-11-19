@@ -31,6 +31,14 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_kind_of TestContext, @parser.context
     assert_equal 'r', @parser.tag_prefix
   end
+
+  def test_parse_tag_with_dashes
+    define_tag 'some-tag' do |tag|
+      'ok'
+    end
+
+    assert_parse_output 'ok', '<r:some-tag>nope</r:some-tag>'
+  end
   
   def test_parse_individual_tags_and_parameters
     define_tag "add" do |tag|
