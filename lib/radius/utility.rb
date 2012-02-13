@@ -33,7 +33,7 @@ module Radius
       end
     else
       def self.array_to_s(c)
-        c.map{|x| x.is_a?(Array) ? array_to_s(x) : x.to_s }.join
+        c.map{|x| (x.is_a?(Array) ? array_to_s(x) : x.to_s).force_encoding(Encoding::UTF_8) }.join
       end
     end
   end
