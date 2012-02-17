@@ -25,6 +25,6 @@ class RadiusUtilityTest < Test::Unit::TestCase
   end
 
   def test_array_to_s
-    assert_equal Radius::Utility.array_to_s(['a', 1, [:c]]), 'a1c'
+    assert_equal Radius::Utility.array_to_s(['a', 1, [:c], 'brain'.freeze]), 'a1cbrain'
   end
 end
