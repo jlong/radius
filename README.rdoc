@@ -7,7 +7,7 @@ be used to generate any form of plain text (HTML, e-mail, etc...).
 
 == Build Status
 
-https://secure.travis-ci.org/jlong/radius.png?branch=master
+https://secure.travis-ci.org/jlong/radius.png
 
 
 == Usage
