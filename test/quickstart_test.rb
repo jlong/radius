@@ -13,14 +13,14 @@ class QuickstartTest < Test::Unit::TestCase
   end
   
   def test_example_2
-    require 'redcloth'
+    require 'kramdown'
     context = Radius::Context.new
-    context.define_tag "textile" do |tag|
+    context.define_tag "markdown" do |tag|
       contents = tag.expand
-      RedCloth.new(contents).to_html
+      Kramdown::Document.new(contents).to_html
     end
     parser = Radius::Parser.new(context)
-    assert_equal "<p>Hello <b>World</b>!</p>", parser.parse('<radius:textile>Hello **World**!</radius:textile>')
+    assert_equal "<p>Hello <strong>World</strong>!</p>\n", parser.parse('<radius:markdown>Hello **World**!</radius:markdown>')
   end
   
   def test_nested_example
