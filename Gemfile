@@ -3,5 +3,5 @@ source :rubygems
 gemspec
 
 group :test do
-  gem 'RedCloth'
+  gem 'kramdown'
 end

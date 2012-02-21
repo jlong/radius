@@ -24,7 +24,7 @@ Gem::Specification.new do |s|
   s.summary = %q{A tag-based templating language for Ruby.}
   
   if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-    s.add_development_dependency(%q<RedCloth>, [">= 0"])
+    s.add_development_dependency(%q<kramdown>, [">= 0"])
     s.add_development_dependency('rake', ['~> 0.8.7'])
   else
     s.add_dependency(%q<RedCloth>, [">= 0"])
