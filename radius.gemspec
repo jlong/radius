@@ -16,19 +16,11 @@ Gem::Specification.new do |s|
     "QUICKSTART.rdoc",
     "README.rdoc"
   ]
-  
+
   ignores = File.read('.gitignore').split("\n").inject([]) {|a,p| a + Dir[p] }
   s.files = Dir['**/*','.gitignore'] - ignores
-  
+
   s.homepage = %q{http://github.com/jlong/radius}
   s.summary = %q{A tag-based templating language for Ruby.}
-  
-  if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-    s.add_development_dependency(%q<kramdown>, [">= 0"])
-    s.add_development_dependency('rake', ['~> 0.8.7'])
-  else
-    s.add_dependency(%q<RedCloth>, [">= 0"])
-    s.add_dependency('rake', ['~> 0.8.7'])
-  end
 end
 
