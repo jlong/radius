@@ -2,7 +2,5 @@ source "https://rubygems.org"
 
 gemspec
 
-group :test do
-  gem 'rake'
-  gem 'kramdown'
-end
+gem 'rake'
+gem 'kramdown'
