@@ -1,6 +1,6 @@
 = Radius -- Powerful Tag-Based Templates {<img src="https://secure.travis-ci.org/jlong/radius.png" />}[http://travis-ci.org/jlong/radius]
 
-{<img src="https://travis-ci.org/jlong/radius.png?branch=master" alt="Build Status" />}[https://travis-ci.org/jlong/radius] {<img src="https://codeclimate.com/github/jlong/radius.png" />}[https://codeclimate.com/github/jlong/radius]
+{<img src="https://travis-ci.org/jlong/radius.png?branch=master" alt="Build Status" />}[https://travis-ci.org/jlong/radius] {<img src="https://codeclimate.com/github/jlong/radius.png" />}[https://codeclimate.com/github/jlong/radius] {<img src="https://coveralls.io/repos/jlong/radius/badge.png" alt="Coverage Status" />}[https://coveralls.io/r/jlong/radius]
 
 
 Radius is a powerful tag-based template language for Ruby inspired by the
