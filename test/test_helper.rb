@@ -1,17 +1,26 @@
-require 'rubygems'
+require 'simplecov'
+SimpleCov.start do
+  add_filter 'test'
+end
+
+require 'coveralls'
+if ENV['COVERALLS']
+  Coveralls.wear!
+end
+
 require 'timeout'
 
 unless defined? RADIUS_LIB
-  
+
   RADIUS_LIB = File.join(File.dirname(__FILE__), '..', 'lib')
   $LOAD_PATH << RADIUS_LIB
-  
+
   require 'radius'
   require 'test/unit'
-  
+
   module RadiusTestHelper
     class TestContext < Radius::Context; end
-    
+
     def new_context
       Radius::Context.new do |c|
         c.define_tag("reverse"   ) { |tag| tag.expand.reverse }
@@ -24,11 +33,11 @@ unless defined? RADIUS_LIB
         end
       end
     end
-    
+
     def define_tag(name, options = {}, &block)
       @parser.context.define_tag name, options, &block
     end
-    
+
     def define_global_tag(name, options = {}, &block)
       @context.define_tag name, options, &block
     end

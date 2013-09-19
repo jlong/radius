@@ -2,5 +2,9 @@ source "https://rubygems.org"
 
 gemspec
 
-gem 'rake'
-gem 'kramdown'
+group :test do
+  gem 'rake'
+  gem 'kramdown'
+  gem "simplecov"
+  gem 'coveralls', :require => false
+end
