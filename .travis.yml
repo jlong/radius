@@ -1,3 +1,4 @@
+language: ruby
 rvm:
   - 1.8.7
   - 1.9.3
@@ -6,3 +7,5 @@ rvm:
   - rbx-19mode
   - jruby-18mode
   - jruby-19mode
+env:
+- COVERALLS=true
