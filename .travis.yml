@@ -7,3 +7,4 @@ rvm:
   - jruby-19mode
 env:
 - COVERALLS=true
+cache: bundler
