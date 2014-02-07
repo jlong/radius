@@ -12,7 +12,9 @@ end
 
 
 platforms :rbx do
-  gem 'racc'
+  gem 'racc'                     # if using gems like ruby_parser or parser
   gem 'rubysl', '~> 2.0'
   gem 'psych'
+  gem 'rubysl-test-unit'         # if using test-unit with minitest 5.x https://github.com/rubysl/rubysl-test-unit/issues/1
+  gem 'rubinius-developer_tools'
 end
