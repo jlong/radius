@@ -39,6 +39,14 @@ class RadiusParserTest < Test::Unit::TestCase
 
     assert_parse_output 'ok', '<r:some-tag>nope</r:some-tag>'
   end
+
+  def test_parse_tag_with_dashed_attributes
+    define_tag 'tag-with-dashed-attributes' do |tag|
+      "dashed: #{tag.attr['data-dashed']} regular: #{tag.attr['regular']}"
+    end
+    assert_parse_output 'dashed: dashed-value regular: value', '<r:tag-with-dashed-attributes data-dashed="dashed-value" regular="value"></r:tag-with-dashed-attributes>'
+  end
+
   
   def test_parse_individual_tags_and_parameters
     define_tag "add" do |tag|
