@@ -9,3 +9,10 @@ group :test do
   gem "simplecov"
   gem 'coveralls', :require => false
 end
+
+
+platforms :rbx do
+  gem 'racc'
+  gem 'rubysl', '~> 2.0'
+  gem 'psych'
+end
