@@ -3,6 +3,7 @@ rvm:
   - 1.9.3
   - 2.0.0
   - rbx
+  - jruby-18mode
   - jruby-19mode
 env:
 - COVERALLS=true
