@@ -9,6 +9,7 @@ group :test do
   gem "simplecov"
   gem 'test-unit', '2.5.5'
   gem 'coveralls', :require => false
+  gem 'minitest'
 end
 
 

@@ -1,8 +1,8 @@
 require 'thread'
-require 'test/unit'
+require 'test_helper'
 require 'radius'
 
-class MultithreadTest < Test::Unit::TestCase
+class MultithreadTest < Minitest::Test
 
   def setup
     Thread.abort_on_exception

@@ -1,7 +1,7 @@
-require 'test/unit'
+require 'test_helper'
 require 'radius'
 
-class RadiusUtilityTest < Test::Unit::TestCase
+class RadiusUtilityTest < Minitest::Test
   
   def test_symbolize_keys
     h = Radius::Utility.symbolize_keys({ 'a' => 1, :b => 2 })

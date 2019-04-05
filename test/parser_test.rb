@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
-class RadiusParserTest < Test::Unit::TestCase
+class RadiusParserTest < Minitest::Test
   include RadiusTestHelper
   
   def setup
@@ -211,11 +211,11 @@ class RadiusParserTest < Test::Unit::TestCase
     end
     parts = %w{decima nobis augue at facer processus commodo legentis odio lectorum dolore nulla esse lius qui nonummy ullamcorper erat ii notare}
     multiplier = parts.map{|p| "#{p}=\"#{rand}\""}.join(' ')
-    assert_nothing_raised do
+    assert ->{
       Timeout.timeout(10) do
         assert_parse_output " false", %{<r:set value="false" #{multiplier} /> <r:var />}
       end
-    end
+    }.call
   end
   
   def test_tag_option_for

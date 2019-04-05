@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
-class RadiusContextTest < Test::Unit::TestCase
+class RadiusContextTest < Minitest::Test
   include RadiusTestHelper
   
   class SuperContext < Radius::Context
@@ -24,7 +24,7 @@ class RadiusContextTest < Test::Unit::TestCase
       assert_kind_of Radius::Context, c
       c.define_tag('test') { 'just a test' }
     end
-    assert_not_equal Hash.new, @context.definitions
+    refute_equal Hash.new, @context.definitions
   end
   
   def test_initialize_with_arguments
@@ -64,7 +64,7 @@ class RadiusContextTest < Test::Unit::TestCase
     
     text = ''
     expected = %{undefined tag `undefined_tag' with attributes {"cool"=>"beans"}}
-    assert_nothing_raised { text = @context.render_tag('undefined_tag', 'cool' => 'beans') }
+    text = @context.render_tag('undefined_tag', 'cool' => 'beans')
     assert_equal expected, text
   end
   

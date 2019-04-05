@@ -1,7 +1,7 @@
-require 'test/unit'
+require 'test_helper'
 require 'radius'
 
-class RadiusOrdStringTest < Test::Unit::TestCase
+class RadiusOrdStringTest < Minitest::Test
 
   def test_string_slice_integer
     str = Radius::OrdString.new "abc"

@@ -1,7 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 require 'radius/parser/squiggle_scanner'
 
-class RadiusSquiggleTest < Test::Unit::TestCase
+class RadiusSquiggleTest < Minitest::Test
   include RadiusTestHelper
   
   def setup
@@ -181,11 +181,11 @@ class RadiusSquiggleTest < Test::Unit::TestCase
     end
     parts = %w{decima nobis augue at facer processus commodo legentis odio lectorum dolore nulla esse lius qui nonummy ullamcorper erat ii notare}
     multiplier = parts.map{|p| "#{p}=\"#{rand}\""}.join(' ')
-    assert_nothing_raised do
+    assert ->{
       Timeout.timeout(10) do
         assert_parse_output " false", %[{set value="false" #{multiplier} /} {var /}]
       end
-    end
+    }.call
   end
   
   def test_tag_option_for

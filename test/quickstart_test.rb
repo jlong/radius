@@ -1,6 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/test_helper')
 
-class QuickstartTest < Test::Unit::TestCase
+class QuickstartTest < Minitest::Test
 
   def test_hello_world
     context = Radius::Context.new

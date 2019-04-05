@@ -16,7 +16,7 @@ unless defined? RADIUS_LIB
   $LOAD_PATH << RADIUS_LIB
 
   require 'radius'
-  require 'test/unit'
+  require 'minitest'
 
   module RadiusTestHelper
     class TestContext < Radius::Context; end
@@ -43,3 +43,4 @@ unless defined? RADIUS_LIB
     end
   end
 end
+require 'minitest/autorun'
