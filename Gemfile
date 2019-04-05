@@ -7,6 +7,7 @@ group :test do
   gem 'rake'
   gem 'kramdown'
   gem "simplecov"
+  gem 'test-unit', '2.5.5'
   gem 'coveralls', :require => false
 end
 
