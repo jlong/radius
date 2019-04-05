@@ -52,7 +52,14 @@ class RadiusParserTest < Test::Unit::TestCase
     assert_parse_output attributes, %{<r:attr a="1" b='2'c="3"d="'" />}
     assert_parse_output attributes, %{<r:attr a="1" b='2'c="3"d="'"></r:attr>}
   end
-  
+
+  def test_parse_attribute_names_with_dash_and_underscore
+    attributes = %{{"a_b"=>"1"}}
+    assert_parse_output attributes, %{<r:attr a_b="1" />}
+    attributes = %{{"c-d"=>"1"}}
+    assert_parse_output attributes, %{<r:attr c-d="1" />}
+  end
+
   def test_parse_attributes_with_slashes_or_angle_brackets
     slash = %{{"slash"=>"/"}}
     angle = %{{"angle"=>">"}}

@@ -4,7 +4,7 @@ module Radius
     # The regular expression used to find (1) opening and self-enclosed tag names, (2) self-enclosing trailing slash, 
     # (3) attributes and (4) closing tag 
     def scanner_regex(prefix = nil)
-      %r{<#{prefix}:([-\w:]+?)(\s+(?:\w+\s*=\s*(?:"[^"]*?"|'[^']*?')\s*)*|)(\/?)>|<\/#{prefix}:([-\w:]+?)\s*>}
+      %r{<#{prefix}:([-\w:]+?)(\s+(?:[-\w]+\s*=\s*(?:"[^"]*?"|'[^']*?')\s*)*|)(\/?)>|<\/#{prefix}:([-\w:]+?)\s*>}
     end
     
     # Parses a given string and returns an array of nodes.
@@ -47,7 +47,7 @@ module Radius
 
     def parse_attributes(text) # :nodoc:
       attr = {}
-      re = /(\w+?)\s*=\s*('|")(.*?)\2/
+      re = /([-\w]+?)\s*=\s*('|")(.*?)\2/
       while md = re.match(text)
         attr[$1] = $3
         text = md.post_match
