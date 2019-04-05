@@ -8,3 +8,6 @@ rvm:
 env:
 - COVERALLS=true
 cache: bundler
+matrix:
+  allow_failures:
+  - rvm: rbx
