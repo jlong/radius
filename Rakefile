@@ -1,4 +1,4 @@
-require 'rubygems'
+require 'bundler/gem_tasks'
 require 'rake'
 
 require File.dirname(__FILE__) + '/lib/radius/version'
