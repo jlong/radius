@@ -83,7 +83,7 @@ class QuickstartTest < Minitest::Test
   
   class LazyContext < Radius::Context
     def tag_missing(tag, attr, &block)
-      "<strong>ERROR: Undefined tag `#{tag}' with attributes #{attr.inspect}</strong>"
+      "<strong>ERROR: Undefined tag `#{tag}' with attributes #{attr.inspect.sub(" => ", "=>")}</strong>"
     end
   end
   def test_tag_missing_example
