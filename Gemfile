@@ -7,14 +7,14 @@ group :test do
   gem 'rake'
   gem 'kramdown'
   gem "simplecov"
-  gem 'coveralls', :require => false
+  gem 'coveralls-ruby', :require => false
   gem 'minitest'
 end
 
 
 platforms :rbx do
   gem 'racc'                     # if using gems like ruby_parser or parser
-  gem 'rubysl', '~> 2.0'
+  # gem 'rubysl', '~> 2.0'
   gem 'psych'
   gem 'rubinius-developer_tools'
 end

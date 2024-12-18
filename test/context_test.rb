@@ -58,7 +58,7 @@ class RadiusContextTest < Minitest::Test
   def test_tag_missing
     class << @context
       def tag_missing(tag, attr, &block)
-        "undefined tag `#{tag}' with attributes #{attr.inspect}"
+        "undefined tag `#{tag}' with attributes #{attr.inspect.sub(" => ", "=>")}"
       end
     end
     

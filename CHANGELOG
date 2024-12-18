@@ -1,5 +1,8 @@
 = Change Log
 
+== UNRELEASED
+* Avoid errors with frozen strings in Ruby 3.4+ [jeremyevans]
+
 == 0.8.0
 * Drop support for EOL versions of Ruby
 
