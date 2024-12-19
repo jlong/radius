@@ -18,3 +18,7 @@ platforms :rbx do
   gem 'psych'
   gem 'rubinius-developer_tools'
 end
+
+platforms :jruby do
+  gem 'jar-dependencies', '~> 0.4.1'
+end
