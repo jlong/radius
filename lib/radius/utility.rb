@@ -27,11 +27,7 @@ module Radius
       string
     end
 
-    if RUBY_VERSION[0,3] == '1.8'
-      def self.array_to_s(c)
-        c.to_s
-      end
-    elsif RUBY_VERSION[0,3] >= '2.3'
+    if RUBY_VERSION[0,3] >= '2.3'
       def self.array_to_s(c)
         c.map do |x|
           res = (x.is_a?(Array) ? array_to_s(x) : x.to_s)
