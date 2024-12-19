@@ -7,7 +7,7 @@ group :test do
   gem 'rake'
   gem 'kramdown'
   gem "simplecov"
-  gem 'coveralls-ruby', :require => false
+  gem 'coveralls_reborn', :require => false
   gem 'minitest'
 end
 
@@ -17,4 +17,8 @@ platforms :rbx do
   # gem 'rubysl', '~> 2.0'
   gem 'psych'
   gem 'rubinius-developer_tools'
+end
+
+platforms :jruby do
+  gem 'jar-dependencies', '~> 0.4.1'
 end
