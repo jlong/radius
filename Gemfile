@@ -7,7 +7,7 @@ group :test do
   gem 'rake'
   gem 'kramdown'
   gem "simplecov"
-  gem 'coveralls-ruby', :require => false
+  gem 'coveralls_reborn', :require => false
   gem 'minitest'
 end
 
