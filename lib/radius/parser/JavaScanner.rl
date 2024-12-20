@@ -3,20 +3,37 @@
 	
 	action _prefix { mark_pfx = p; }
 	action prefix {
-    prefix = input.substring(mark_pfx, p);
+    prefix = String.valueOf(input.substring(mark_pfx, p));
 	}
   action _check_prefix {
 	  if ( !prefix.equals(tag_prefix) ) {
-      // have to manually add ':' / Sep
-      // pass the text through & reset state
-      pass_through(input.substring(tagstart, p) + ":");
+      // Pass through the entire tag markup as text
+      pass_through(input.substring(tagstart, p + 1));
+      // Reset all state
       prefix = "";
+      name = "";
+      attributes = RubyHash.newHash(runtime);
+      flavor = RubySymbol.newSymbol(runtime, "tasteless".intern());
+      tagstart = p + 1;
       fgoto main;
     }
   }
 
 	action _starttag { mark_stg = p; }
-	action starttag { name = input.substring(mark_stg, p); }
+	action starttag {
+    name = String.valueOf(input.substring(mark_stg, p));
+    if (name == null || name.trim().isEmpty()) {
+      // Pass through the entire tag markup as text
+      pass_through(input.substring(tagstart, p + 1));
+      // Reset all state
+      prefix = "";
+      name = "";
+      attributes = RubyHash.newHash(runtime);
+      flavor = RubySymbol.newSymbol(runtime, "tasteless".intern());
+      tagstart = p + 1;
+      fgoto main;
+    }
+	}
 	action _attr { mark_attr = p; }
 	action attr {
     attributes.op_aset(
@@ -40,7 +57,7 @@
 	# words
 	PrefixChar = [\-A-Za-z0-9._?] ;
 	NameChar = [\-A-Za-z0-9._:?] ;
-	TagName = NameChar+ >_starttag %starttag;
+	TagName = ([\-A-Za-z0-9._?]+ (':' [\-A-Za-z0-9._?]+)*) >_starttag %starttag;
 	Prefix = PrefixChar+ >_prefix %prefix;
   Open = "<";
   Sep = ":" >_check_prefix;
@@ -111,11 +128,23 @@ public class JavaScanner {
   }
 
   void tag(String prefix, String name, RubyHash attr, RubySymbol flavor) {
+    // Validate both prefix and name
+    if ((prefix == null || prefix.trim().isEmpty()) && 
+        (name == null || name.trim().isEmpty())) {
+        pass_through("<");
+        return;
+    }
+    
+    if (name == null || name.trim().isEmpty()) {
+        pass_through("<" + prefix + ":");
+        return;
+    }
+
     RubyHash tag = RubyHash.newHash(runtime);
     tag.op_aset(
       runtime.getCurrentContext(),
       RubySymbol.newSymbol(runtime, "prefix"),
-      RubyString.newString(runtime, prefix)
+      RubyString.newString(runtime, prefix != null ? prefix : "")
     );
     tag.op_aset(
       runtime.getCurrentContext(),

@@ -58,6 +58,7 @@ module Radius
       else
         tag_definition_block = @definitions[qualified_tag_name(name.to_s)]
         if tag_definition_block
+          # puts name: name, attributes: attributes
           stack(name, attributes, block) do |tag|
             tag_definition_block.call(tag).to_s
           end

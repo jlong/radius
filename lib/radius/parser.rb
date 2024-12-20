@@ -67,7 +67,11 @@ module Radius
 
     def default_scanner
       if RUBY_PLATFORM == 'java'
-        require 'java'
+        if Gem::Version.new(JRUBY_VERSION) >= Gem::Version.new('9.3')
+          require 'jruby'
+        else
+          require 'java'
+        end
         require 'radius/parser/java_scanner.jar'
         ::Radius.send(:include_package, 'radius.parser')
         Radius::JavaScanner.new(JRuby.runtime)

@@ -36,5 +36,6 @@ jobs:
           bundler-cache: true
       - name: Run tests
         env:
-          COVERALLS: true
+          COVERALLS: ${{ matrix.ruby-version != 'jruby' }}
+          JRUBY_OPTS: ${{ matrix.ruby-version == 'jruby' && '--debug' || '' }}
         run: bundle exec rake
