@@ -27,11 +27,8 @@ Gem::Specification.new do |s|
 
   s.metadata = {
     "homepage_uri" => "https://github.com/jlong/radius",
-    "source_code_uri" => "https://github.com/jlong/radius",
     "changelog_uri" => "https://github.com/jlong/radius/blob/master/CHANGELOG",
     "bug_tracker_uri" => "https://github.com/jlong/radius/issues"
   }
-
-  s.platforms = [Gem::Platform::RUBY, 'java']
 end
 
