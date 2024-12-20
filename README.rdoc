@@ -66,7 +66,7 @@ It is recommended that you install Radius using the RubyGems packaging system:
 
 == License
 
-Radius is released under the MIT license and is copyright (c) 2006-2010
+Radius is released under the MIT license and is copyright (c) 2006-2025
 John W. Long. A copy of the MIT license can be found in the LICENSE file.
 
 
@@ -87,10 +87,6 @@ This is a prioritized roadmap for future releases:
 == Development
 
 The latest version of Radius can be found on RubyForge:
-
-http://rubyforge.org/projects/radius
-
-Experimental and development versions of Radius can be found on Github:
 
 http://github.com/jlong/radius
 
