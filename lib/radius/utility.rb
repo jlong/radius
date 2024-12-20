@@ -22,15 +22,12 @@ module Radius
     end
     
     def self.camelize(underscored_string)
-      string = ''
-      underscored_string.split('_').each { |part| string << part.capitalize }
-      string
+      underscored_string.split('_').map(&:capitalize).join
     end
 
     def self.array_to_s(c)
-      c.map do |x|
-        res = (x.is_a?(Array) ? array_to_s(x) : x.to_s)
-        +res
+      +c.map do |x|
+        x.is_a?(Array) ? array_to_s(x) : x.to_s
       end.join
     end
   end
