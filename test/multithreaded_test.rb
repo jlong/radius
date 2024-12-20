@@ -26,12 +26,17 @@ class MultithreadTest < Minitest::Test
         local_results = []
         iterations_per_thread.times do
           begin
-            parser = Radius::Parser.new(@context, :tag_prefix => 'r')
+            thread_context = @context.dup
+            parser = Radius::Parser.new(thread_context, :tag_prefix => 'r')
             parser.context.globals.thread_id = Thread.current.object_id
             expected = "#{Thread.current.object_id} / #{parser.context.globals.object_id}"
             result = parser.parse('<r:thread />')
 
-            local_results << result
+            local_results << {
+              result: result,
+              thread_id: Thread.current.object_id,
+              iteration: local_results.size
+            }
 
             failures << "Expected: #{expected}, Got: #{result}" unless result == expected
           rescue => e
@@ -48,12 +53,26 @@ class MultithreadTest < Minitest::Test
     failure_message = if failures.empty?
       nil
     else
-      "Thread failures detected:\n#{failures.size} times:\n#{failures.pop(5).join("\n")}"
+      failed_items = []
+      5.times { failed_items << failures.pop unless failures.empty? }
+      "Thread failures detected:\n#{failures.size} times:\n#{failed_items.join("\n")}"
     end
 
     assert(failures.empty?, failure_message)
     total_results = results.flatten.uniq.size
     expected_unique_results = thread_count * iterations_per_thread
+
+    if total_results != expected_unique_results
+      duplicates = results.flatten.group_by { |r| r[:result] }
+                         .select { |_, v| v.size > 1 }
+
+      puts "\nDuplicates found:"
+      duplicates.each do |result, occurrences|
+        puts "\nResult: #{result[:result]}"
+        occurrences.each { |o| puts "  Thread: #{o[:thread_id]}, Iteration: #{o[:iteration]}" }
+      end
+    end
+
     assert_equal expected_unique_results, total_results,
       "Expected #{expected_unique_results} unique results (#{thread_count} threads × #{iterations_per_thread} iterations)"
   end
