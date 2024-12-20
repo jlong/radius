@@ -17,67 +17,92 @@ module Radius
   
     # Creates a new parser object initialized with a Context.
     def initialize(context = Context.new, options = {})
-      if context.kind_of?(Hash) and options.empty?
-        options, context = context, (context[:context] || context['context'])
-      end
-      options = Utility.symbolize_keys(options)
-      self.context = context ? context.dup : Context.new
-      self.tag_prefix = options[:tag_prefix] || 'radius'
-      self.scanner = options[:scanner] || default_scanner
+      context, options = normalize_initialization_params(context, options)
+      @context = context ? context.dup : Context.new
+      @tag_prefix = options[:tag_prefix] || 'radius'
+      @scanner = options[:scanner] || default_scanner
+      @stack = nil # Pre-initialize stack
     end
     
     # Parses string for tags, expands them, and returns the result.
     def parse(string)
-      @stack = [ ParseContainerTag.new { |t| Utility.array_to_s(t.contents) } ]
-      tokenize(string)
-      stack_up
+      @stack = [create_root_container]
+      process_tokens(scanner.operate(tag_prefix, string))
       @stack.last.to_s
     end
     
-    protected
-    # Convert the string into a list of text blocks and scanners (tokens)
-    def tokenize(string)
-      @tokens = scanner.operate(tag_prefix, string)
+    private
+
+    def normalize_initialization_params(context, options)
+      return [context['context'] || context[:context], context] if context.is_a?(Hash) && options.empty?
+      [context, Utility.symbolize_keys(options)]
     end
-    
-    def stack_up
-      @tokens.each do |t|
-        if t.is_a? String
-          @stack.last.contents << t
-          next
-        end
-        case t[:flavor]
-        when :open
-          @stack.push(ParseContainerTag.new(t[:name], t[:attrs]))
-        when :self
-          @stack.last.contents << ParseTag.new {@context.render_tag(t[:name], t[:attrs])}
-        when :close
-          popped = @stack.pop
-          raise WrongEndTagError.new(popped.name, t[:name], @stack) if popped.name != t[:name]
-          popped.on_parse { |b| @context.render_tag(popped.name, popped.attributes) { Utility.array_to_s(b.contents) } }
-          @stack.last.contents << popped
-        when :tasteless
-          raise TastelessTagError.new(t, @stack)
-        else
-          raise UndefinedFlavorError.new(t, @stack)
-        end
+
+    def create_root_container
+      ParseContainerTag.new { |t| Utility.array_to_s(t.contents) }
+    end
+
+    def process_tokens(tokens)
+      tokens.each { |token| process_token(token) }
+      validate_final_stack
+    end
+
+    def process_token(token)
+      return @stack.last.contents << token if token.is_a?(String)
+
+      case token[:flavor]
+      when :open    then handle_open_tag(token)
+      when :self    then handle_self_tag(token)
+      when :close   then handle_close_tag(token)
+      when :tasteless then raise TastelessTagError.new(token, @stack)
+      else raise UndefinedFlavorError.new(token, @stack)
       end
+    end
+
+    def handle_open_tag(token)
+      @stack.push(ParseContainerTag.new(token[:name], token[:attrs]))
+    end
+
+    def handle_self_tag(token)
+      @stack.last.contents << ParseTag.new { @context.render_tag(token[:name], token[:attrs]) }
+    end
+
+    def handle_close_tag(token)
+      popped = @stack.pop
+      validate_tag_match(popped, token[:name])
+      wrap_and_push_tag(popped)
+    end
+
+    def validate_tag_match(popped, name)
+      raise WrongEndTagError.new(popped.name, name, @stack) if popped.name != name
+    end
+
+    def wrap_and_push_tag(tag)
+      tag.on_parse { |b| @context.render_tag(tag.name, tag.attributes) { Utility.array_to_s(b.contents) } }
+      @stack.last.contents << tag
+    end
+
+    def validate_final_stack
       raise MissingEndTagError.new(@stack.last.name, @stack) if @stack.length != 1
     end
 
     def default_scanner
       if RUBY_PLATFORM == 'java'
-        if Gem::Version.new(JRUBY_VERSION) >= Gem::Version.new('9.3')
-          require 'jruby'
-        else
-          require 'java'
-        end
-        require 'radius/parser/java_scanner.jar'
-        ::Radius.send(:include_package, 'radius.parser')
-        Radius::JavaScanner.new(JRuby.runtime)
+        load_java_scanner
       else
         Radius::Scanner.new
       end
+    end
+
+    def load_java_scanner
+      if Gem::Version.new(JRUBY_VERSION) >= Gem::Version.new('9.3')
+        require 'jruby'
+      else
+        require 'java'
+      end
+      require 'radius/parser/java_scanner.jar'
+      ::Radius.send(:include_package, 'radius.parser')
+      Radius::JavaScanner.new(JRuby.runtime)
     end
   end
 end
