@@ -27,20 +27,11 @@ module Radius
       string
     end
 
-    if RUBY_VERSION[0,3] >= '2.3'
-      def self.array_to_s(c)
-        c.map do |x|
-          res = (x.is_a?(Array) ? array_to_s(x) : x.to_s)
-          +res
-        end.join
-      end
-    else
-      def self.array_to_s(c)
-        c.map do |x|
-          res = (x.is_a?(Array) ? array_to_s(x) : x.to_s)
-          (res.frozen? ? res.dup : res).force_encoding(Encoding::UTF_8)
-        end.join
-      end
+    def self.array_to_s(c)
+      c.map do |x|
+        res = (x.is_a?(Array) ? array_to_s(x) : x.to_s)
+        +res
+      end.join
     end
   end
 end
