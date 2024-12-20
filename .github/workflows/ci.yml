@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    types: [opened, synchronize, reopened]
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - ruby-version: '2.7.8'
+            bundler-version: '2.4.22'
+          - ruby-version: '3.0.7'
+            bundler-version: '2.5.23'
+          - ruby-version: '3.1.6'
+            bundler-version: '2.6.1'
+          - ruby-version: '3.3.6'
+            bundler-version: '2.6.1'
+          - ruby-version: '3.4.0-rc1'
+            bundler-version: '2.6.1'
+          - ruby-version: 'jruby'
+            bundler-version: '2.6.1'
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby-version }}
+          bundler: ${{ matrix.bundler-version }}
+          bundler-cache: true
+      - name: Run tests
+        env:
+          COVERALLS: ${{ matrix.ruby-version != 'jruby' }}
+          JRUBY_OPTS: ${{ matrix.ruby-version == 'jruby' && '--debug' || '' }}
+        run: bundle exec rake
