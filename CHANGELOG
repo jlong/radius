@@ -1,6 +1,7 @@
 = Change Log
 
 == 0.8.0
+* Ensure that the DelegatingOpenStruct is a true copy of the original [saturnflyer]
 * Avoid errors with frozen strings in Ruby 3.4+ [jeremyevans]
 * Drop support for EOL versions of Ruby
 

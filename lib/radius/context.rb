@@ -96,7 +96,7 @@ module Radius
       def stack(name, attributes, block)
         previous = @tag_binding_stack.last
         previous_locals = previous.nil? ? globals : previous.locals
-        locals = DelegatingOpenStruct.new(previous_locals)
+        locals = previous_locals.dup
         binding = TagBinding.new(self, locals, name, attributes, block)
         @tag_binding_stack.push(binding)
         result = yield(binding)
