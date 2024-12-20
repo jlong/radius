@@ -8,30 +8,26 @@ module Radius
     end
 
     def dup
-      rv = self.class.new
-      rv.instance_variable_set(:@hash, @hash.dup)
-      rv
+      self.class.new.tap do |copy|
+        copy.instance_variable_set(:@hash, @hash.dup)
+        copy.object = @object
+      end
     end
     
     def method_missing(method, *args, &block)
-      symbol = (method.to_s =~ /^(.*?)=$/) ? $1.intern : method
-      if (0..1).include?(args.size)
-        if args.size == 1
-          @hash[symbol] = args.first
-        else
-          if @hash.has_key?(symbol)
-            @hash[symbol]
-          else
-            unless object.nil?
-              @object.send(method, *args, &block)
-            else
-              nil
-            end
-          end
-        end
+      return super if args.size > 1
+      
+      symbol = method.to_s.chomp('=').to_sym
+      
+      if method.to_s.end_with?('=')
+        @hash[symbol] = args.first
       else
-        super
+        @hash.fetch(symbol) { @object&.public_send(method, *args, &block) }
       end
+    end
+
+    def respond_to_missing?(method, include_private = false)
+      (args.size <= 1) || super
     end
   end
 end

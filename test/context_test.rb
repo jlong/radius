@@ -35,6 +35,14 @@ class RadiusContextTest < Minitest::Test
     assert_equal 'arg', @context.name
   end
   
+  def test_dup_preserves_delegated_values
+    @context = Radius::Context.new
+    @context.globals.object = Object.new.tap { |o| def o.special_method; "special"; end }
+    duped = @context.dup
+
+    assert_equal "special", duped.globals.special_method, "Duped context should preserve delegated object methods"
+  end
+
   def test_with
     got = @context.with do |c|
       assert_equal @context, c
