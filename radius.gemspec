@@ -31,5 +31,7 @@ Gem::Specification.new do |s|
     "changelog_uri" => "https://github.com/jlong/radius/blob/master/CHANGELOG",
     "bug_tracker_uri" => "https://github.com/jlong/radius/issues"
   }
+
+  s.platforms = [Gem::Platform::RUBY, 'java']
 end
 
