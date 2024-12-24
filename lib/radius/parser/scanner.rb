@@ -10,7 +10,7 @@ module Radius
     # Parses a given string and returns an array of nodes.
     # The nodes consist of strings and hashes that describe a Radius tag that was found.
     def operate(prefix, data)
-      data = Radius::OrdString.new data
+      data = Radius::OrdString(data)
       @nodes = ['']
       
       re = scanner_regex(prefix)
