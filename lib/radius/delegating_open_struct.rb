@@ -27,7 +27,8 @@ module Radius
     end
 
     def respond_to_missing?(method, include_private = false)
-      (args.size <= 1) || super
+      @hash.key?(method.to_s.chomp('=').to_sym) ||
+        @object&.respond_to?(method) || super
     end
   end
 end
