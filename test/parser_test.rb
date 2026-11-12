@@ -185,6 +185,37 @@ class RadiusParserTest < Minitest::Test
     assert_parse_output "  true  false", %{<r:var /> <r:set value="true" /> <r:var /> <r:set value="false" /> <r:var />}
   end
   
+  def test_nested_locals_see_global_updates
+    define_tag "set" do |tag|
+      tag.globals.var = tag.attr['value']
+      ''
+    end
+    define_tag "var" do |tag|
+      tag.locals.var
+    end
+
+    assert_parse_output '[Hello]', '<r:wrap><r:set value="Hello" /><r:var /></r:wrap>'
+    assert_parse_output '[[Updated]]', '<r:wrap><r:wrap><r:set value="Updated" /><r:var /></r:wrap></r:wrap>'
+  end
+
+  def test_local_overrides_still_shadow_global_updates
+    define_tag "set" do |tag|
+      tag.globals.var = tag.attr['value']
+      ''
+    end
+    define_tag "local" do |tag|
+      tag.locals.var = tag.attr['value']
+      tag.expand
+    end
+    define_tag "var" do |tag|
+      tag.locals.var
+    end
+
+    @parser.context.globals.var = 'Initial'
+    assert_parse_output 'Local:Updated', '<r:local value="Local"><r:set value="Updated" /><r:var /></r:local>:<r:var />'
+    assert_parse_output ':Updated', '<r:local><r:set value="Updated" /><r:var /></r:local>:<r:var />'
+  end
+
   def test_parse_loops
     @item = nil
     define_tag "each" do |tag|
